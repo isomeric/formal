@@ -2,15 +2,15 @@ import setuptools
 
 
 def parse_requirements():
-    fap = open('requirements.txt', 'r')
-    raw_req = fap.read()
-    fap.close()
+    reqs = open('requirements.txt', 'r')
+    raw_req = reqs.read()
+    reqs.close()
     return raw_req.split('\n')
 
 
 setuptools.setup(
     name='warmongo',
-    version='0.5.1',
+    version='0.5.2',
     description='JSON-Schema-based ORM for MongoDB',
     author='Rob Britton',
     author_email='rob@robbritton.com',
