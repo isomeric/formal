@@ -18,7 +18,7 @@ from copy import deepcopy
 from bson import ObjectId
 from datetime import datetime
 
-from exceptions import ValidationError, InvalidSchemaException
+from .exceptions import ValidationError, InvalidSchemaException
 
 inflect_engine = inflect.engine()
 
@@ -26,7 +26,7 @@ ValidTypes = {
     "integer": int,
     "boolean": bool,
     "number": float,
-    "string": basestring,
+    "string": str,
     "object_id": ObjectId,
     "date": datetime
 }
@@ -168,10 +168,10 @@ class ModelBase(object):
             pass
         elif value_type == "number" or value_type == "integer":
             # special case: can be an int or a float
-            valid_types = [int, float, long]
+            valid_types = [int, float]
             matches = [klass for klass in valid_types if isinstance(value, klass)]
 
-            print matches
+            print(matches)
 
             if len(matches) == 0:
                 raise ValidationError("Field '%s' is of type '%s', received '%s' (%s)" %
@@ -204,6 +204,8 @@ class ModelBase(object):
         elif value_type == "integer" and isinstance(fields, float):
             # The only thing that needs to be casted: floats -> ints
             return int(fields)
+        elif value_type == "object_id":
+            return ObjectId(fields)
         else:
             return fields
 
@@ -230,3 +232,15 @@ class ModelBase(object):
 
         self._fields[attr] = value
         return value
+
+    def update(self, newfields):
+        try:
+            for key, value in newfields.items():
+                try:
+                    if key == '_id' and type(value) == str:
+                        value = ObjectId(value)
+                except Exception as e:
+                    raise ValidationError("Bad ObjectID encountered: '%s' (%s)" % (e, type(e)))
+                self.__setattr__(key, value)
+        except Exception as e:
+            raise ValidationError("Unknown Validation error: '%s' (%s)" % (e, type(e)))

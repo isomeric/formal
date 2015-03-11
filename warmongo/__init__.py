@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model import Model as WarmongoModel
-from exceptions import InvalidSchemaException
+from .model import Model as WarmongoModel
+from .exceptions import InvalidSchemaException
 
 from copy import deepcopy
-import database
+from .database import connect
 import pymongo
 
 # Export connect so we can do warmongo.connect()
-connect = database.connect
+connect = connect
 
 # Export some constants from pymongo
 ASCENDING = pymongo.ASCENDING

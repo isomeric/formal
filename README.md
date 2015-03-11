@@ -1,5 +1,9 @@
 # Warmongo!
 
+This fork is being used for https://github.com/hackerfleet/hfos
+We'll try to maintain upstream but will add certain features for the circuits framework, which we also use:
+https://bitbucket.org/circuits/circuits
+
 ## Description
 
 This is a package for generating classes from a JSON-schema that are to be

@@ -15,9 +15,9 @@
 from bson import ObjectId
 from pymongo import DESCENDING
 
-from model_base import ModelBase
-import database
-from exceptions import InvalidReloadException
+from .model_base import ModelBase
+import warmongo.database
+from .exceptions import InvalidReloadException
 
 
 class Model(ModelBase):
@@ -47,6 +47,19 @@ class Model(ModelBase):
         ''' Removes an object from the database. '''
         if self._id:
             self.collection().remove({"_id": ObjectId(str(self._id))})
+
+    def serializablefields(self):
+        result = {'schema': self._schema,
+                  'data': self._fields
+        }
+
+        try:
+            result['data']['_id'] = str(self._id)
+        except AttributeError:
+            # Not saved yet
+            pass
+
+        return result
 
     @classmethod
     def bulk_create(cls, objects, *args, **kwargs):
@@ -166,5 +179,5 @@ class Model(ModelBase):
         ''' Get the pymongo collection object for this model. Useful for
         features not supported by Warmongo like aggregate queries and
         map-reduce. '''
-        return database.get_collection(collection=cls.collection_name(),
+        return warmongo.database.get_collection(collection=cls.collection_name(),
                                        database=cls.database_name())
