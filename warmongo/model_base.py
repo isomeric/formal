@@ -17,6 +17,7 @@ import inflect
 from copy import deepcopy
 from bson import ObjectId
 from datetime import datetime
+from jsonschema import validate
 
 from .exceptions import ValidationError, InvalidSchemaException
 
@@ -87,7 +88,15 @@ class ModelBase(object):
 
     def validate(self):
         ''' Validate `schema` against a dict `obj`. '''
-        self.validate_field("", self._schema, self._fields)
+        #self.validate_field("", self._schema, self._fields)
+        try:
+            fields = self._fields
+            if '_id' in fields:
+                del(fields['_id'])
+            validate(fields, self._schema)
+        except Exception as e:
+            raise Exception("Error:\n"+ str(e) + "\nFields:\n" + str(self._fields) + "\nSchema:\n" + str(self._schema))
+
 
     def validate_field_type(self, key, value_schema, value, value_type):
         if isinstance(value_type, list):

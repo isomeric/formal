@@ -29,6 +29,9 @@ DESCENDING = pymongo.DESCENDING
 
 def model_factory(schema, base_class=WarmongoModel):
     ''' Construct a model based on `schema` that inherits from `base_class`. '''
+    if not schema.get("id"):
+        raise InvalidSchemaException("No id field in schema!")
+
     if not schema.get("properties"):
         raise InvalidSchemaException("No properties field in schema!")
 
@@ -36,10 +39,6 @@ def model_factory(schema, base_class=WarmongoModel):
         raise InvalidSchemaException("Warmongo models require a top-level 'name' attribute!")
 
     schema = deepcopy(schema)
-
-    # All models have an _id field
-    if not "_id" in schema["properties"]:
-        schema["properties"]["_id"] = {"type": "object_id"}
 
     class Model(base_class):
         _schema = schema

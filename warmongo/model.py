@@ -19,6 +19,8 @@ from .model_base import ModelBase
 import warmongo.database
 from .exceptions import InvalidReloadException
 
+from copy import copy
+
 
 class Model(ModelBase):
     def reload(self):
@@ -49,12 +51,12 @@ class Model(ModelBase):
             self.collection().remove({"_id": ObjectId(str(self._id))})
 
     def serializablefields(self):
-        result = {'schema': self._schema,
-                  'data': self._fields
-        }
+        result = copy(self._fields)
+
+        result['id'] = self._schema['id']
 
         try:
-            result['data']['_id'] = str(self._id)
+            result['_id'] = str(self._id)
         except AttributeError:
             # Not saved yet
             pass
