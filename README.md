@@ -4,10 +4,16 @@ This fork is being used for https://github.com/hackerfleet/hfos
 We'll try to maintain upstream but will add certain features for the circuits framework, which we also use:
 https://bitbucket.org/circuits/circuits
 
+Things that have changed:
+* jsonschema is now truly used to validate objects (it validates far more than just basetypes)
+* we do ignore mongo's object_id - not sure if this is a good thing, but it helps with the schemata
+* we require (by spec) an 'id' field that lists a uri for the schema
+* the resulting field is enforced on instantiated objects, too, so clients can validate by schema-id
+
 ## Description
 
 This is a package for generating classes from a JSON-schema that are to be
-saved in MongoDB.
+saved in MongoDB and (un)pickled via Python's builtin json module or others like simplejson or ujson.
 
 This extends the JSON schema by supporting extra BSON types:
 * ObjectId - use the `"object_id"` type in your JSON schema to validate that
@@ -19,14 +25,15 @@ This extends the JSON schema by supporting extra BSON types:
 
 1) Build your schema
 
-	>>> schema = {
-	    'name': 'Country',
-	    'properties': {
-	        'name': {'type': 'string'},
-	        'abbreviation': {'type': 'string'},
-	    },
-	    'additionalProperties': False,
-	}
+    >>> schema = {
+        'name': 'Country',
+        'id': '#country',
+        'properties': {
+            'name': {'type': 'string'},
+            'abbreviation': {'type': 'string'},
+        },
+        'additionalProperties': False,
+    }
 
 2) Connect to your database
 
@@ -65,6 +72,17 @@ This extends the JSON schema by supporting extra BSON types:
         raise ValidationError("Additional property '%s' not allowed!" % attr)
     warmongo.exceptions.ValidationError: Additional property 'overlord' not allowed!
 
+6) You can also update objects from dictionaries:
+
+    >>> sweden.update({"name": "Sverige"})
+    >>> sweden.save()
+
+7) To get them to a browser or other similar things, serialize them:
+
+    >>> sweden.serializablefields()
+    {'_id': '50b506916ee7d81d42ca2190', 'name': 'Sverige', 'abbreviation': 'SE', 'id': '#country'}
+
+
 ## Choosing a collection
 
 By default Warmongo will use the pluralized version of the model's name. If
@@ -101,7 +119,10 @@ Apache Version 2.0
 
 ## Production Examples
 
-I use warmongo every day at my startup http://www.sweetiq.com/ to share data
-definitions between our Python and Node.js applications. It has been running in
+The Hackerfleet uses warmongo as ORM system to deal with data objects in a developer and enduser friendly way.
+See it in action on http://github.com/hackerfleet/hfos
+
+The original author uses warmongo every day at his startup http://www.sweetiq.com/ to share data
+definitions between their Python and Node.js applications. It has been running in
 production for some time now, so it has been reasonably tested for robustness
 and performance.

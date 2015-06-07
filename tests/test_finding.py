@@ -8,6 +8,7 @@ class TestFinding(unittest.TestCase):
     def setUp(self):
         self.schema = {
             'name': 'Country',
+            "id": "#Country",
             'properties': {
                 'name': {'type': 'string'},
                 'abbreviation': {'type': 'string'},

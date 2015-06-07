@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,14 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
+from datetime import datetime
+
 import inflect
+
+import re
 from copy import deepcopy
 from bson import ObjectId
-from datetime import datetime
 from jsonschema import validate
+from jsonschema.exceptions import ValidationError
+from bson.errors import InvalidId
+from .exceptions import InvalidSchemaException
 
-from .exceptions import ValidationError, InvalidSchemaException
+class OutdatedCodeException(Exception):
+    pass
+
 
 inflect_engine = inflect.engine()
 
@@ -34,11 +41,11 @@ ValidTypes = {
 
 
 class ModelBase(object):
-    ''' This class serves as a base class for the main model types in
-    warmongo: Model, and TwistedModel. '''
+    """ This class serves as a base class for the main model types in
+    warmongo: Model, and TwistedModel. """
 
     def __init__(self, fields={}, from_find=False, *args, **kwargs):
-        ''' Creates an instance of the object.'''
+        """ Creates an instance of the object."""
         self._from_find = from_find
 
         fields = deepcopy(fields)
@@ -53,13 +60,13 @@ class ModelBase(object):
         self.validate()
 
     def get(self, field, default=None):
-        ''' Get a field if it exists, otherwise return the default. '''
+        """ Get a field if it exists, otherwise return the default. """
         return self._fields.get(field, default)
 
     @classmethod
     def collection_name(cls):
-        ''' Get the collection associated with this class. The convention is
-        to take the lowercase of the class name and pluralize it. '''
+        """ Get the collection associated with this class. The convention is
+        to take the lowercase of the class name and pluralize it. """
         global inflect_engine
         if cls._schema.get("collectionName"):
             return cls._schema.get("collectionName")
@@ -76,127 +83,39 @@ class ModelBase(object):
 
     @classmethod
     def database_name(cls):
-        ''' Get the database associated with this class. Meant to be overridden
-        in subclasses. '''
+        """ Get the database associated with this class. Meant to be overridden
+        in subclasses. """
         if cls._schema.get("databaseName"):
             return cls._schema.get("databaseName")
         return None
 
     def to_dict(self):
-        ''' Convert the object to a dict. '''
+        """ Convert the object to a dict. """
         return self._fields
 
     def validate(self):
-        ''' Validate `schema` against a dict `obj`. '''
+        """ Validate `schema` against a dict `obj`. """
         #self.validate_field("", self._schema, self._fields)
         try:
-            fields = self._fields
+            # TODO: Deepcopying for validation is probably not so good ;)
+            fields = deepcopy(self._fields)
             if '_id' in fields:
-                del(fields['_id'])
-            validate(fields, self._schema)
-        except Exception as e:
-            raise Exception("Error:\n"+ str(e) + "\nFields:\n" + str(self._fields) + "\nSchema:\n" + str(self._schema))
-
-
-    def validate_field_type(self, key, value_schema, value, value_type):
-        if isinstance(value_type, list):
-            for subtype in value_type:
                 try:
-                    self.validate_field_type(key, value_schema, value, subtype)
-                    # We got this far, so break
-                    break
-                except ValidationError:
-                    # Ignore it
-                    pass
-            else:
-                # None of them passed,
-                raise ValidationError("Field '%s' must be one of the following types: '%s', received '%s' (%s)" %
-                                      (key, ", ".join(value_type), str(value), type(value)))
-        elif value_type == "array":
-            self.validate_array(key, value_schema, value)
-        elif value_type == "object":
-            self.validate_object(key, value_schema, value)
-        elif value_type == "null":
-            self.validate_null(key, value_schema, value)
-        else:
-            self.validate_simple(key, value_type, value)
+                    obj_id = ObjectId(fields['_id'])
+                except InvalidId:
+                    raise ValidationError('Invalid object ID: ', fields['_id'])
 
-    def validate_field(self, key, value_schema, value):
-        ''' Validate a single field in `value` named `key` against `value_schema`. '''
-        # check the type
-        value_type = value_schema.get("type", "object")
+                # Now remove for schema validation (jsonschema knows nothing off object ids)
+                del (fields['_id'])
 
-        self.validate_field_type(key, value_schema, value, value_type)
+            validate(fields, self._schema)
+        except ValidationError as e:
+            raise ValidationError("Error:\n" + str(e) + "\nFields:\n" + str(self._fields) + "\nSchema:\n" + str(self._schema))
 
-    def validate_array(self, key, value_schema, value):
-        if not isinstance(value, list):
-            raise ValidationError("Field '%s' is of type 'array', received '%s' (%s)" %
-                                  (key, str(value), type(value)))
-
-        if value_schema.get("items"):
-            for item in value:
-                self.validate_field(key, value_schema["items"], item)
-        else:
-            # no items, this is an untyped array
-            pass
-
-    def validate_object(self, key, value_schema, value):
-        if not isinstance(value, dict):
-            raise ValidationError("Field '%s' is of type 'object', received '%s' (%s)" %
-                                  (key, str(value), type(value)))
-
-        if not value_schema.get("properties"):
-            # no validation on this object
-            return
-
-        for subkey, subvalue in value_schema["properties"].items():
-            if subkey in value:
-                self.validate_field(subkey, subvalue, value[subkey])
-            elif subvalue.get("required", False) and not self._from_find:
-                # if the field is required and we haven't pulled from find,
-                # throw an exception
-                raise ValidationError("Field '%s' is required but not found!" %
-                                        subkey)
-
-        # Check for additional properties
-        if not value_schema.get("additionalProperties", True):
-            extra = set(value.keys()) - set(value_schema["properties"].keys())
-
-            if len(extra) > 0:
-                raise ValidationError("Additional properties are not allowed: %s" %
-                                        ', '.join(list(extra)))
-
-    def validate_null(self, key, value_schema, value):
-        if value is not None:
-            raise ValidationError("Field '%s' is expected to be null!" % key)
-
-    def validate_simple(self, key, value_type, value):
-        ''' Validate a simple field (not an object or array) against a schema. '''
-        if value_type == "any":
-            # can be anything
-            pass
-        elif value_type == "number" or value_type == "integer":
-            # special case: can be an int or a float
-            valid_types = [int, float]
-            matches = [klass for klass in valid_types if isinstance(value, klass)]
-
-            print(matches)
-
-            if len(matches) == 0:
-                raise ValidationError("Field '%s' is of type '%s', received '%s' (%s)" %
-                                      (key, value_type, str(value), type(value)))
-        elif value_type in ValidTypes:
-            if not isinstance(value, ValidTypes[value_type]):
-                raise ValidationError("Field '%s' is of type '%s', received '%s' (%s)" %
-                                      (key, value_type, str(value), type(value)))
-            # TODO: check other things like maximum, etc.
-        else:
-            # unknown type
-            raise InvalidSchemaException("Unknown type '%s'!" % value_type)
 
     def cast(self, fields, schema=None):
-        ''' Cast the fields from Mongo into our format - necessary to convert
-        floats into ints since Javascript doesn't support ints. '''
+        """ Cast the fields from Mongo into our format - necessary to convert
+        floats into ints since Javascript doesn't support ints. """
         if schema is None:
             schema = self._schema
 
@@ -214,27 +133,34 @@ class ModelBase(object):
             # The only thing that needs to be casted: floats -> ints
             return int(fields)
         elif value_type == "object_id":
-            return ObjectId(fields)
+            return str(fields)
         else:
             return fields
 
     def __getattr__(self, attr):
-        ''' Get an attribute from the fields we've selected. Note that if the
-        field doesn't exist, this will return None. '''
+        """ Get an attribute from the fields we've selected. Note that if the
+        field doesn't exist, this will return None. """
         if attr in self._schema["properties"] and attr in self._fields:
             return self._fields.get(attr)
         else:
             raise AttributeError("%s has no attribute '%s'" % (str(self), attr))
 
     def __setattr__(self, attr, value):
-        ''' Set one of the fields, with validation. Exception is on "private"
-        fields - the ones that start with _. '''
+        """ Set one of the fields, with validation. Exception is on "private"
+        fields - the ones that start with _. """
         if attr.startswith("_"):
+            if attr == '_id':
+                try:
+                    self._fields['_id'] = ObjectId(value)
+                except InvalidId:
+                    raise ValidationError("Invalid ObjectId")
             return object.__setattr__(self, attr, value)
 
         if attr in self._schema["properties"]:
             # Check the field against our schema
-            self.validate_field(attr, self._schema["properties"][attr], value)
+            validator = deepcopy(self)
+            validator._fields[attr] = value
+            validator.validate()
         elif not self._schema.get("additionalProperties", True):
             # not allowed to add additional properties
             raise ValidationError("Additional property '%s' not allowed!" % attr)
@@ -242,14 +168,10 @@ class ModelBase(object):
         self._fields[attr] = value
         return value
 
-    def update(self, newfields):
+    def update(self, newfields, updateId=False):
         try:
             for key, value in newfields.items():
-                try:
-                    if key == '_id' and type(value) == str:
-                        value = ObjectId(value)
-                except Exception as e:
-                    raise ValidationError("Bad ObjectID encountered: '%s' (%s)" % (e, type(e)))
-                self.__setattr__(key, value)
+                if not key == "_id" or updateId:
+                    self.__setattr__(key, value)
         except Exception as e:
             raise ValidationError("Unknown Validation error: '%s' (%s)" % (e, type(e)))

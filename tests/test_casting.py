@@ -7,6 +7,7 @@ class TestValidation(unittest.TestCase):
     def testCastWithObject(self):
         schema = {
             "name": "Model",
+            "id": "#Model",
             "properties": {
                 "field": {
                     "type": "object",
@@ -33,6 +34,7 @@ class TestValidation(unittest.TestCase):
     def testCastWithArray(self):
         schema = {
             "name": "Model",
+            "id": "#Model",
             "properties": {
                 "field": {
                     "type": "array",
@@ -58,6 +60,7 @@ class TestValidation(unittest.TestCase):
     def testBasicCast(self):
         schema = {
             "name": "Model",
+            "id": "#Model",
             "properties": {
                 "field": {"type": "integer"},
                 "other_field": {"type": "string"},

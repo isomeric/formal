@@ -24,7 +24,7 @@ from copy import copy
 
 class Model(ModelBase):
     def reload(self):
-        ''' Reload this object's data from the DB. '''
+        """ Reload this object's data from the DB. """
         result = self.__class__.find_by_id(self._id)
 
         # result will be None in the case that this object hasn't yet been
@@ -36,7 +36,7 @@ class Model(ModelBase):
             raise InvalidReloadException("No object in the database with ID %s" % self._id)
 
     def save(self, *args, **kwargs):
-        ''' Saves an object to the database. '''
+        """ Saves an object to the database. """
         self.validate()
 
         # set safe to True by default, older versions of pymongo didn't do that
@@ -46,7 +46,7 @@ class Model(ModelBase):
         self._id = self.collection().save(self._fields, *args, **kwargs)
 
     def delete(self):
-        ''' Removes an object from the database. '''
+        """ Removes an object from the database. """
         if self._id:
             self.collection().remove({"_id": ObjectId(str(self._id))})
 
@@ -55,25 +55,22 @@ class Model(ModelBase):
 
         result['id'] = self._schema['id']
 
-        try:
-            result['_id'] = str(self._id)
-        except AttributeError:
-            # Not saved yet
-            pass
+        if '_id' in result:
+            result['_id'] = str(result['_id'])
 
         return result
 
     @classmethod
     def bulk_create(cls, objects, *args, **kwargs):
-        ''' Create a number of objects (yay performance). '''
+        """ Create a number of objects (yay performance). """
         docs = [obj._fields for obj in objects]
         return cls.collection().insert(docs)
 
     @classmethod
     def find_or_create(cls, query, *args, **kwargs):
-        ''' Retrieve an element from the database. If it doesn't exist, create
+        """ Retrieve an element from the database. If it doesn't exist, create
         it.  Calling this method is equivalent to calling find_one and then
-        creating an object. Note that this method is not atomic.  '''
+        creating an object. Note that this method is not atomic.  """
         result = cls.find_one(query, *args, **kwargs)
 
         if result is None:
@@ -86,12 +83,12 @@ class Model(ModelBase):
 
     @classmethod
     def find(cls, *args, **kwargs):
-        ''' Grabs a set of elements from the DB.
+        """ Grabs a set of elements from the DB.
         Note: This returns a generator, so you can't to do an efficient count.
         To get a count, use the count() function which accepts the same
         arguments as find() with the exception of non-query fields like sort,
         limit, skip.
-        '''
+        """
         options = {}
 
         for option in ["sort", "limit", "skip", "batch_size"]:
@@ -136,12 +133,13 @@ class Model(ModelBase):
                 yield cls(obj, from_find=True)
 
     @classmethod
-    def find_by_id(cls, id, **kwargs):
-        ''' Finds a single object from this collection. '''
-        if isinstance(id, basestring):
-            id = ObjectId(id)
+    def find_by_id(cls, obj_id, **kwargs):
+        """ Finds a single object from this collection. """
+        
+        if isinstance(obj_id, str):
+            obj_id = ObjectId(obj_id)
 
-        args = {"_id": id}
+        args = {"_id": obj_id}
 
         result = cls.collection().find_one(args, **kwargs)
         if result is not None:
@@ -150,7 +148,7 @@ class Model(ModelBase):
 
     @classmethod
     def find_latest(cls, *args, **kwargs):
-        ''' Finds the latest one by _id and returns it. '''
+        """ Finds the latest one by _id and returns it. """
         kwargs["limit"] = 1
         kwargs["sort"] = [("_id", DESCENDING)]
 
@@ -162,7 +160,7 @@ class Model(ModelBase):
 
     @classmethod
     def find_one(cls, *args, **kwargs):
-        ''' Finds a single object from this collection. '''
+        """ Finds a single object from this collection. """
         result = cls.collection().find_one(*args, **kwargs)
         if result is not None:
             return cls(result)
@@ -170,16 +168,16 @@ class Model(ModelBase):
 
     @classmethod
     def count(cls, *args, **kwargs):
-        ''' Counts the number of items:
+        """ Counts the number of items:
             - not the same as pymongo's count, this is the equivalent to:
                 collection.find(*args, **kwargs).count()
-        '''
+        """
         return cls.collection().find(*args, **kwargs).count()
 
     @classmethod
     def collection(cls):
-        ''' Get the pymongo collection object for this model. Useful for
+        """ Get the pymongo collection object for this model. Useful for
         features not supported by Warmongo like aggregate queries and
-        map-reduce. '''
+        map-reduce. """
         return warmongo.database.get_collection(collection=cls.collection_name(),
                                        database=cls.database_name())
