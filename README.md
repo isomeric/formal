@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/Hackerfleet/warmongo.svg)](https://travis-ci.org/Hackerfleet/warmongo)
 # Warmongo!
 
 This fork is being used for https://github.com/hackerfleet/hfos
