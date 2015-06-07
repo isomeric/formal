@@ -122,9 +122,10 @@ class ModelBase(object):
         value_type = schema.get("type", "object")
 
         if value_type == "object" and isinstance(fields, dict) and schema.get("properties"):
-            return {
-                key: self.cast(value, schema["properties"].get(key, {})) for key, value in fields.items()
-            }
+            result = {}
+            for key, value in fields.items():
+                result[key] = self.cast(value, schema["properties"].get(key, {}))
+            return result
         elif value_type == "array" and isinstance(fields, list) and schema.get("items"):
             return [
                 self.cast(value, schema["items"]) for value in fields
