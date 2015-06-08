@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='warmongo',
-    version='0.5.4-hf',
+    version='0.5.3.hf',
     description='JSON-Schema-based ORM for MongoDB',
     author='Rob Britton',
     author_email='rob@robbritton.com',
@@ -25,6 +25,7 @@ setuptools.setup(
 """,
     install_requires=['pymongo==3.0.1',
                       'jsonschema==2.5.0',
+                      'inflect==0.2.4'
                       ],
     test_requires=['nose',
                    'coverage'],
