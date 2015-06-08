@@ -1,25 +1,14 @@
 import setuptools
 
-
-def parse_requirements():
-    reqs = open('requirements.txt', 'r')
-    raw_req = reqs.read()
-    reqs.close()
-    return raw_req.split('\n')
-
-
 setuptools.setup(
     name='warmongo',
-    version='0.5.3-hf',
+    version='0.5.4-hf',
     description='JSON-Schema-based ORM for MongoDB',
     author='Rob Britton',
     author_email='rob@robbritton.com',
     url='http://github.com/robbrit/warmongo',
     keywords=["mongodb", "jsonschema"],
     packages=['warmongo'],
-    package_data={"warmongo": ["requirements.txt"]},
-    include_package_data=True,
-    install_requires=parse_requirements(),
     classifiers=[
         "Programming Language :: Python",
         "License :: OSI Approved :: Apache Software License",
@@ -34,4 +23,10 @@ setuptools.setup(
   Allows you to build models validated against a JSON-schema file, and save
   them to MongoDB.
 """,
+    install_requires=['pymongo==3.0.1',
+                      'jsonschema==2.5.0',
+                      ],
+    test_requires=['nose',
+                   'coverage'],
+    test_suite="tests"
 )
