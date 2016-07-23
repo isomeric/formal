@@ -1,10 +1,16 @@
+# hfoswarmongo
+# ============
 # Copyright 2013 Rob Britton
+# Copyright 2015 riot <riot@hackerfleet.org> and others.
+#
+# This file has been changed and this notice has been added in
+# accordance to the Apache License
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,12 +20,10 @@
 
 from datetime import datetime
 
-import inflect
-
 import re
 from copy import deepcopy
 from bson import ObjectId
-from jsonschema import validate
+from jsonschema import validate, Draft4Validator, validators
 from jsonschema.exceptions import ValidationError
 from bson.errors import InvalidId
 from .exceptions import InvalidSchemaException
@@ -27,8 +31,6 @@ from .exceptions import InvalidSchemaException
 class OutdatedCodeException(Exception):
     pass
 
-
-inflect_engine = inflect.engine()
 
 ValidTypes = {
     "integer": int,
@@ -38,6 +40,28 @@ ValidTypes = {
     "object_id": ObjectId,
     "date": datetime
 }
+
+def extend_with_default(validator_class):
+    validate_properties = validator_class.VALIDATORS["properties"]
+
+    def set_defaults(validator, properties, instance, schema):
+        for property, subschema in properties.items():
+            #print(property, subschema)
+            if "default" in subschema:
+                #print("Setting default: ", subschema['default'])
+                instance.setdefault(property, subschema["default"])
+
+        for error in validate_properties(
+            validator, properties, instance, schema,
+        ):
+            yield error
+
+    return validators.extend(
+        validator_class, {"properties" : set_defaults},
+    )
+
+
+DefaultValidatingDraft4Validator = extend_with_default(Draft4Validator)
 
 
 class ModelBase(object):
@@ -52,6 +76,7 @@ class ModelBase(object):
 
         # populate any default fields for objects that haven't come from the DB
         if not from_find:
+            #DefaultValidatingDraft4Validator(self._schema).validate(fields)
             for field, details in self._schema["properties"].items():
                 if "default" in details and not field in fields:
                     fields[field] = details["default"]
@@ -67,7 +92,6 @@ class ModelBase(object):
     def collection_name(cls):
         """ Get the collection associated with this class. The convention is
         to take the lowercase of the class name and pluralize it. """
-        global inflect_engine
         if cls._schema.get("collectionName"):
             return cls._schema.get("collectionName")
         elif cls._schema.get("name"):
@@ -78,8 +102,7 @@ class ModelBase(object):
         # convert to snake case
         name = (name[0] + re.sub('([A-Z])', r'_\1', name[1:])).lower()
 
-        # pluralize
-        return inflect_engine.plural(name)
+        return name
 
     @classmethod
     def database_name(cls):
@@ -97,8 +120,9 @@ class ModelBase(object):
         """ Validate `schema` against a dict `obj`. """
         #self.validate_field("", self._schema, self._fields)
         try:
+            pass
             # TODO: Deepcopying for validation is probably not so good ;)
-            fields = deepcopy(self._fields)
+            fields = dict(self._fields)
             if '_id' in fields:
                 try:
                     obj_id = ObjectId(fields['_id'])
@@ -110,7 +134,7 @@ class ModelBase(object):
 
             validate(fields, self._schema)
         except ValidationError as e:
-            raise ValidationError("Error:\n" + str(e) + "\nFields:\n" + str(self._fields) + "\nSchema:\n" + str(self._schema))
+            raise ValidationError("Error:\n" + str(e) + "\nFields:\n" + str(self._fields))
 
 
     def cast(self, fields, schema=None):
@@ -121,8 +145,9 @@ class ModelBase(object):
 
         value_type = schema.get("type", "object")
 
-        if value_type == "object" and isinstance(fields, dict) and schema.get("properties"):
-            result = {}
+        if value_type == "object" and isinstance(fields, dict) and \
+                schema.get("properties"):
+            result = dict()
             for key, value in fields.items():
                 result[key] = self.cast(value, schema["properties"].get(key, {}))
             return result
@@ -138,13 +163,49 @@ class ModelBase(object):
         else:
             return fields
 
+    def __str__(self):
+        return str(self.to_dict())
+
     def __getattr__(self, attr):
         """ Get an attribute from the fields we've selected. Note that if the
         field doesn't exist, this will return None. """
         if attr in self._schema["properties"] and attr in self._fields:
             return self._fields.get(attr)
         else:
-            raise AttributeError("%s has no attribute '%s'" % (str(self), attr))
+            raise AttributeError("Item has no attribute '%s'" % attr)
+
+
+        # if attr.startswith('_'):
+        #     return super(ModelBase, self).__getattr__(attr)
+        #
+        # if attr in self._schema["properties"] and attr in self._fields:
+        #     #print("Direct hit")
+        #     return self._fields.get(attr)
+        # curschema = self._schema["properties"]
+        # curfields = self._fields
+        # path = attr
+        # newattr = path
+        #
+        # #print("Query path:", path)
+        # #print("Initial Fields:", curfields)
+        #
+        # while '.' in path:
+        #
+        #     newattr, path = path.split('.', maxsplit=1)
+        #     #print("Looking for intermediate path in ", newattr, path)
+        #
+        #     if newattr in curschema and newattr in curfields:
+        #         curschema = curschema[newattr]['properties']
+        #         curfields = curfields[newattr]
+        #     else:
+        #         raise AttributeError("Item has no intermediate attribute '%s'"
+        #                              % ( newattr))
+        #
+        #
+        # if newattr in curschema and newattr in curfields:
+        #     return curfields.get(newattr)
+        # else:
+        #     raise AttributeError("Item has no attribute '%s'" % ( attr))
 
     def __setattr__(self, attr, value):
         """ Set one of the fields, with validation. Exception is on "private"
