@@ -1,14 +1,27 @@
+"""
+Changes notice
+==============
+
+This file has been changed by the Hackerfleet Community and this notice has
+been added in accordance to the Apache License 2.0
+
+The original author's data is:
+ author='Rob Britton',
+ author_email='rob@robbritton.com',
+ url='http://github.com/robbrit/warmongo',
+"""
+
 import setuptools
 
 setuptools.setup(
-    name='warmongo',
-    version='0.5.3.hf',
-    description='JSON-Schema-based ORM for MongoDB',
-    author='Rob Britton',
-    author_email='rob@robbritton.com',
-    url='http://github.com/robbrit/warmongo',
+    name="hfos-warmongo",
+    version="0.5.4",
+    description="JSON-Schema-based ORM for MongoDB",
+    author="Heiko 'riot' Weinen",
+    author_email="riot@hackerfleet.org",
+    url="http://github.com/Hackerfleet/hfos-warmongo",
     keywords=["mongodb", "jsonschema"],
-    packages=['warmongo'],
+    packages=["warmongo"],
     classifiers=[
         "Programming Language :: Python",
         "License :: OSI Approved :: Apache Software License",
@@ -23,11 +36,8 @@ setuptools.setup(
   Allows you to build models validated against a JSON-schema file, and save
   them to MongoDB.
 """,
-    install_requires=['pymongo>=3.0.2',
-                      'jsonschema>=2.5.1',
-                      'inflect==0.2.4'
+    install_requires=["pymongo>=3.0.2",
+                      "jsonschema>=2.5.1",
                       ],
-    test_requires=['nose',
-                   'coverage'],
     test_suite="tests"
 )
