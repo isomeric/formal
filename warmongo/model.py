@@ -39,12 +39,18 @@ class Model(ModelBase):
         """ Saves an object to the database. """
         self.validate()
 
-        self._id = self.collection().save(self._fields, *args, **kwargs)
+        self._fields['_id'] = self.collection().save(self._fields, *args,
+                                                  **kwargs)
 
     def delete(self):
         """ Removes an object from the database. """
-        if self._id:
-            self.collection().remove({"_id": ObjectId(str(self._id))})
+        try:
+            self.collection().remove({"_id": ObjectId(str(self._fields[
+                                                            '_id']))})
+        except Exception as e:
+            print("Uh oh: ", e, type(e))
+
+
 
     def serializablefields(self):
         result = copy(self._fields)
@@ -131,7 +137,7 @@ class Model(ModelBase):
     @classmethod
     def find_by_id(cls, obj_id, **kwargs):
         """ Finds a single object from this collection. """
-        
+
         if isinstance(obj_id, str):
             obj_id = ObjectId(obj_id)
 
