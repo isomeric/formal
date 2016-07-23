@@ -36,7 +36,7 @@ setuptools.setup(
   Allows you to build models validated against a JSON-schema file, and save
   them to MongoDB.
 """,
-    install_requires=["pymongo>=3.0.2",
+    install_requires=["pymongo>=3.2",
                       "jsonschema>=2.5.1",
                       ],
     test_suite="tests"
