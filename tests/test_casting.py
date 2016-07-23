@@ -1,3 +1,12 @@
+"""
+Changes notice
+==============
+
+This file has been changed by the Hackerfleet Community and this notice has
+been added in accordance to the Apache License 2.0
+
+"""
+
 import unittest
 
 import warmongo

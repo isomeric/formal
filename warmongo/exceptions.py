@@ -1,4 +1,10 @@
+# hfoswarmongo
+# ============
 # Copyright 2013 Rob Britton
+# Copyright 2015 riot <riot@hackerfleet.org> and others.
+#
+# This file has been changed and this notice has been added in
+# accordance to the Apache License
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

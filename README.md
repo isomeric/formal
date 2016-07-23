@@ -118,6 +118,11 @@ a different one, put it in the JSON-schema:
 
 Apache Version 2.0
 
+## Change notice
+
+This file has been changed by the Hackerfleet Community and a change notice has
+been added to all modified files in accordance to the Apache License 2.0
+
 ## Production Examples
 
 The Hackerfleet uses warmongo as ORM system to deal with data objects in a developer and enduser friendly way.
