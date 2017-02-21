@@ -76,10 +76,10 @@ class ModelBase(object):
 
         # populate any default fields for objects that haven't come from the DB
         if not from_find:
-            #DefaultValidatingDraft4Validator(self._schema).validate(fields)
-            for field, details in self._schema["properties"].items():
-                if "default" in details and not field in fields:
-                    fields[field] = details["default"]
+            DefaultValidatingDraft4Validator(self._schema).validate(fields)
+            #for field, details in self._schema["properties"].items():
+            #    if "default" in details and not field in fields:
+            #        fields[field] = details["default"]
 
         self._fields = self.cast(fields)
         self.validate()
