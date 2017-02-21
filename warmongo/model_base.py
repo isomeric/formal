@@ -68,11 +68,19 @@ class ModelBase(object):
     """ This class serves as a base class for the main model types in
     warmongo: Model, and TwistedModel. """
 
-    def __init__(self, fields={}, from_find=False, *args, **kwargs):
+    def __init__(self, origfields={}, from_find=False, *args, **kwargs):
         """ Creates an instance of the object."""
         self._from_find = from_find
 
-        fields = deepcopy(fields)
+        fields = deepcopy(origfields)
+        has_id = False
+        if '_id' in fields:
+            try:
+                _ = ObjectId(fields['_id'])
+            except InvalidId:
+                raise ValidationError('Invalid object ID: ', fields['_id'])
+            has_id = True
+            del fields['_id']
 
         # populate any default fields for objects that haven't come from the DB
         if not from_find:
@@ -83,6 +91,8 @@ class ModelBase(object):
 
         self._fields = self.cast(fields)
         self.validate()
+        if has_id:
+            self._fields['_id'] = origfields['_id']
 
     def get(self, field, default=None):
         """ Get a field if it exists, otherwise return the default. """
@@ -125,7 +135,7 @@ class ModelBase(object):
             fields = dict(self._fields)
             if '_id' in fields:
                 try:
-                    obj_id = ObjectId(fields['_id'])
+                    _ = ObjectId(fields['_id'])
                 except InvalidId:
                     raise ValidationError('Invalid object ID: ', fields['_id'])
 
