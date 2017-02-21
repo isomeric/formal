@@ -195,12 +195,6 @@ class TestValidation(unittest.TestCase):
 
         Model = warmongo.model_factory(schema)
 
-        # floats should not cause validation errors, but they do get truncated
-        m = Model({
-            "field": 7.8
-        })
-
-        self.assertEqual(7, m.field)
         self.assertRaises(ValidationError, Model, {
             "field": "hi"
         })
