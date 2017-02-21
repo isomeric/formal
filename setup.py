@@ -15,7 +15,7 @@ import setuptools
 
 setuptools.setup(
     name="hfos-warmongo",
-    version="0.5.4",
+    version="0.5.5",
     description="JSON-Schema-based ORM for MongoDB",
     author="Heiko 'riot' Weinen",
     author_email="riot@hackerfleet.org",
@@ -37,7 +37,7 @@ setuptools.setup(
   them to MongoDB.
 """,
     install_requires=["pymongo>=3.2",
-                      "jsonschema>=2.5.1",
+                      "jsonschema>=2.6.0",
                       ],
     test_suite="tests"
 )
