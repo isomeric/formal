@@ -114,6 +114,10 @@ a different one, put it in the JSON-schema:
         ...
     }
 
+## PostgreSQL as backend
+
+Please see https://www.torodb.com/stampede/docs/1.0.0-beta3/quickstart/ on how to set up ToroDB Stampede. 
+
 ## Licence
 
 Apache Version 2.0
