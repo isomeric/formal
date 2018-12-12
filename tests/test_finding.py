@@ -53,7 +53,7 @@ class TestFinding(unittest.TestCase):
         usa.save()
 
     def testFindOne(self):
-        ''' Test grabbing a single value the Mongo way '''
+        """ Test grabbing a single value the Mongo way """
 
         usa = self.Country.find_one({"abbreviation": "US"})
 
@@ -61,7 +61,7 @@ class TestFinding(unittest.TestCase):
         self.assertEqual("United States of America", usa.name)
 
     def testFind(self):
-        ''' Just grab a bunch of stuff '''
+        """ Just grab a bunch of stuff """
 
         countries = self.Country.find()
 
@@ -71,13 +71,13 @@ class TestFinding(unittest.TestCase):
         self.assertEqual(2, len(countries))
 
     def testCount(self):
-        ''' See if everything is there '''
+        """ See if everything is there """
         self.assertEqual(2, self.Country.count())
         self.assertEqual(1, self.Country.count({"abbreviation": "SE"}))
         self.assertEqual(0, self.Country.count({"abbreviation": "CA"}))
 
     def testFindAll(self):
-        ''' Test fetching everything the mongo way '''
+        """ Test fetching everything the mongo way """
 
         countries = self.Country.find({"abbreviation": "SE"})
 

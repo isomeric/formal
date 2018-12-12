@@ -51,7 +51,7 @@ class TestCreating(unittest.TestCase):
         })
 
     def testNormalCreate(self):
-        ''' Test with doing things the Mongo way '''
+        """ Test with doing things the Mongo way """
 
         canada = self.Country({
             "name": "Canada",

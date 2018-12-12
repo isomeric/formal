@@ -19,13 +19,13 @@
 # limitations under the License.
 
 class InvalidSchemaException(Exception):
-    ''' Thrown when we have discovered an invalid schema. '''
+    """ Thrown when we have discovered an invalid schema. """
     pass
 
 class ValidationError(Exception):
-    ''' Thrown when a field does not match the schema. '''
+    """ Thrown when a field does not match the schema. """
     pass
 
 class InvalidReloadException(Exception):
-    ''' Thrown when we attempt to call reload() on a model that is not in the
-    database. '''
+    """ Thrown when we attempt to call reload() on a model that is not in the
+    database. """
