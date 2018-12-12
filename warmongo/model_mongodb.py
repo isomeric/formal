@@ -14,6 +14,7 @@
 
 from bson import ObjectId
 from pymongo import DESCENDING
+from deepdiff import DeepDiff
 
 from .model_base import ModelBase
 import warmongo.database
@@ -33,24 +34,25 @@ class Model(ModelBase):
         if result:
             self._fields = self.cast(result._fields)
         else:
-            raise InvalidReloadException("No object in the database with ID %s" % self._id)
+            raise InvalidReloadException(
+                "No object in the database with ID %s" % self._id)
 
     def save(self, *args, **kwargs):
         """ Saves an object to the database. """
         self.validate()
 
         self._fields['_id'] = self.collection().save(self._fields, *args,
-                                                  **kwargs)
+                                                     **kwargs)
 
     def delete(self):
         """ Removes an object from the database. """
         try:
-            self.collection().remove({"_id": ObjectId(str(self._fields[
-                                                            '_id']))})
+            self.collection().remove({
+                "_id": ObjectId(str(self._fields['_id']))
+            })
         except Exception as e:
-            print("Uh oh: ", e, type(e))
-
-
+            print("Deletion failed: ", e, type(e))
+            raise e
 
     def serializablefields(self):
         result = copy(self._fields)
@@ -98,7 +100,8 @@ class Model(ModelBase):
                 options[option] = kwargs[option]
                 del options[option]
 
-        if "batch_size" in options and "skip" not in options and "limit" not in options:
+        if "batch_size" in options and "skip" not in options and "limit" not \
+                in options:
             # run things in batches
             current_skip = 0
             limit = options["batch_size"]
@@ -181,5 +184,28 @@ class Model(ModelBase):
         """ Get the pymongo collection object for this model. Useful for
         features not supported by Warmongo like aggregate queries and
         map-reduce. """
-        return warmongo.database.get_collection(collection=cls.collection_name(),
-                                       database=cls.database_name())
+        return warmongo.database.get_collection(
+            collection=cls.collection_name(),
+            database=cls.database_name())
+
+    @classmethod
+    def make_migration(cls, new_schema):
+        delta = DeepDiff(cls._schema, new_schema)
+        return delta
+
+    @classmethod
+    def migrate(cls, patchset):
+
+        def apply_patch(patch):
+            def migrate_thing(thing, patch):
+
+                for diff in patch:
+                    print('Would now apply ', diff, patch[diff], 'to',
+                          thing.name)
+
+            for thing in cls.collection().find_all():
+                migrate_thing(thing, patch)
+
+        for patch in patchset:
+            print('Applying patch', patch)
+            apply_patch(patchset[patch])
