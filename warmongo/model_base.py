@@ -180,6 +180,9 @@ class ModelBase(object):
     def __str__(self):
         return str(self.to_dict())
 
+    def __repr__(self):
+        return str(self.name if self.name is not None else self.to_dict())
+
     def __getattr__(self, attr):
         """ Get an attribute from the fields we've selected. Note that if the
         field doesn't exist, this will return None. """
