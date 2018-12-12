@@ -41,3 +41,7 @@ nosetests.xml
 include
 local
 man
+
+# Caches
+/.pytest_cache/
+/.eggs/
