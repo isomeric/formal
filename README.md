@@ -2,6 +2,8 @@
 
 # Formal!
 
+A Python library for object document mapping with MongoDB and SQL dialects(WiP) using JSON schema.
+
 ## Description
 
 This is a package for generating classes from a JSON-schema that are to be
@@ -16,7 +18,7 @@ This extends the JSON schema by supporting extra BSON types:
 ## Usage
 
 1) Build your schema
-
+```
     >>> schema = {
         'name': 'Country',
         'id': '#country',
@@ -26,25 +28,33 @@ This extends the JSON schema by supporting extra BSON types:
         },
         'additionalProperties': False,
     }
+```
 
 2) Connect to your database
 
+```
     >>> import formal
     >>> formal.connect("test")
+```
 
 3) Create a model
 
+```
     >>> Country = formal.model_factory(schema)
+```
 
 4) Create an object using your model
 
+```
     >>> sweden = Country({"name": 'Sweden', "abbreviation": 'SE'})
     >>> sweden.save()
     >>> sweden._id
     ObjectId('50b506916ee7d81d42ca2190')
+```
 
 5) Let the object validate itself!
 
+```    
     >>> sweden = Country.find_one({"name" : "Sweden"})
     >>> sweden.name = 5
     Traceback (most recent call last):
@@ -63,53 +73,63 @@ This extends the JSON schema by supporting extra BSON types:
       File "formal/model.py", line 257, in __setattr__
         raise ValidationError("Additional property '%s' not allowed!" % attr)
     formal.exceptions.ValidationError: Additional property 'overlord' not allowed!
+```
 
 6) You can also update objects from dictionaries:
 
+```
     >>> sweden.update({"name": "Sverige"})
     >>> sweden.save()
+```
 
 7) To get them to a browser or other similar things, serialize them:
 
+```
     >>> sweden.serializablefields()
     {'_id': '50b506916ee7d81d42ca2190', 'name': 'Sverige', 'abbreviation': 'SE', 'id': '#country'}
-
+```
 
 ## Choosing a collection
 
 By default Formal will use the pluralized version of the model's name. If
 you want to use something else, put it in the JSON-schema:
 
+```
     {
         "name": "MyModel",
         ...
         "collectionName": "some_collection",
         ...
     }
+```
 
 ## Multiple Databases
 
 To use multiple databases, simply call `connect()` multiple times:
 
+```
     >>> import formal
     >>> formal.connect("test")
     >>> formal.connect("other_db")
+```
 
 By default all models will use the first database specified. If you want to use
 a different one, put it in the JSON-schema:
 
+```
     {
         "name": "MyModel",
         ...
         "databaseName": "other_db",
         ...
     }
+```
 
 ## SQL Operation
 
 ..is still work in progress.
 
-## History
+# History
 
 Formal is a fork of warmongo, originally written by Rob Britton.
 
@@ -125,7 +145,7 @@ Work in progress:
 * Deep dot notation
 * Delta operation for concurrent editing and object history
 
-## Licence
+# Licence
 
 Apache Version 2.0
 
@@ -134,7 +154,7 @@ Apache Version 2.0
 This file has been changed by the Hackerfleet Community and a change notice has
 been added to all modified files in accordance to the Apache License 2.0
 
-## Production Examples
+# Production Examples
 
 The Isomer framework uses Formal as object document mapping system to deal with data objects in a developer and 
 enduser friendly way.
