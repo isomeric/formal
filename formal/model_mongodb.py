@@ -1,4 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+
+# Formal
+# ======
+#
 # Copyright 2013 Rob Britton
+# Copyright 2015-2019 Heiko 'riot' Weinen <riot@c-base.org> and others.
+#
+# This file has been changed and this notice has been added in
+# accordance to the Apache License
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,19 +21,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+
+
+"""
+Changes notice
+==============
+
+This file has been changed by the Hackerfleet Community and this notice has
+been added in accordance to the Apache License 2.0
+
+"""
 
 from bson import ObjectId
 from pymongo import DESCENDING
-from deepdiff import DeepDiff
 
 from .model_base import ModelBase
-import warmongo.database
+import formal.database
 from .exceptions import InvalidReloadException
 
 from copy import copy
 
 
 class Model(ModelBase):
+    """The Mongodb object model class"""
+
     def reload(self):
         """ Reload this object's data from the DB. """
         result = self.__class__.find_by_id(self._id)
@@ -34,27 +56,28 @@ class Model(ModelBase):
         if result:
             self._fields = self.cast(result._fields)
         else:
-            raise InvalidReloadException(
-                "No object in the database with ID %s" % self._id)
+            raise InvalidReloadException("No object in the database with ID %s" % self._id)
 
     def save(self, *args, **kwargs):
         """ Saves an object to the database. """
         self.validate()
 
         self._fields['_id'] = self.collection().save(self._fields, *args,
-                                                     **kwargs)
+                                                            **kwargs)
 
     def delete(self):
         """ Removes an object from the database. """
         try:
             self.collection().remove({
-                "_id": ObjectId(str(self._fields['_id']))
+                "_id": ObjectId(str(self._fields[
+                                        '_id']))
             })
         except Exception as e:
-            print("Deletion failed: ", e, type(e))
-            raise e
+            print("Uh oh: ", e, type(e))
 
     def serializablefields(self):
+        """Return serializable fields of the object"""
+
         result = copy(self._fields)
 
         result['id'] = self._schema['id']
@@ -100,8 +123,7 @@ class Model(ModelBase):
                 options[option] = kwargs[option]
                 del options[option]
 
-        if "batch_size" in options and "skip" not in options and "limit" not \
-                in options:
+        if "batch_size" in options and "skip" not in options and "limit" not in options:
             # run things in batches
             current_skip = 0
             limit = options["batch_size"]
@@ -172,40 +194,19 @@ class Model(ModelBase):
         return None
 
     @classmethod
-    def count(cls, *args, **kwargs):
+    def count(cls, object_filter=None):
         """ Counts the number of items:
             - not the same as pymongo's count, this is the equivalent to:
                 collection.find(*args, **kwargs).count()
         """
-        return cls.collection().find(*args, **kwargs).count()
+        if object_filter is None:
+            object_filter = {}
+        return cls.collection().count_documents(object_filter)
 
     @classmethod
     def collection(cls):
         """ Get the pymongo collection object for this model. Useful for
-        features not supported by Warmongo like aggregate queries and
+        features not supported by formal like aggregate queries and
         map-reduce. """
-        return warmongo.database.get_collection(
-            collection=cls.collection_name(),
-            database=cls.database_name())
-
-    @classmethod
-    def make_migration(cls, new_schema):
-        delta = DeepDiff(cls._schema, new_schema)
-        return delta
-
-    @classmethod
-    def migrate(cls, patchset):
-
-        def apply_patch(patch):
-            def migrate_thing(thing, patch):
-
-                for diff in patch:
-                    print('Would now apply ', diff, patch[diff], 'to',
-                          thing.name)
-
-            for thing in cls.collection().find_all():
-                migrate_thing(thing, patch)
-
-        for patch in patchset:
-            print('Applying patch', patch)
-            apply_patch(patchset[patch])
+        return formal.database.get_collection(collection=cls.collection_name(),
+                                              database=cls.database_name())

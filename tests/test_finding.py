@@ -1,3 +1,28 @@
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+
+# Formal
+# ======
+#
+# Copyright 2013 Rob Britton
+# Copyright 2015-2019 Heiko 'riot' Weinen <riot@c-base.org> and others.
+#
+# This file has been changed and this notice has been added in
+# accordance to the Apache License
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 """
 Changes notice
 ==============
@@ -9,12 +34,12 @@ been added in accordance to the Apache License 2.0
 
 import unittest
 
-import warmongo
+import formal
 
 
 class TestFinding(unittest.TestCase):
-
     def setUp(self):
+        """Set up the test scaffolding"""
         self.schema = {
             'name': 'Country',
             "id": "#Country",
@@ -31,12 +56,12 @@ class TestFinding(unittest.TestCase):
             'additionalProperties': False,
         }
 
-        # Connect to warmongo_test - hopefully it doesn't exist
-        warmongo.connect("warmongo_test")
-        self.Country = warmongo.model_factory(self.schema)
+        # Connect to formal_test - hopefully it doesn't exist
+        formal.connect("formal_test")
+        self.Country = formal.model_factory(self.schema)
 
         # Drop all the data in it
-        self.Country.collection().remove({})
+        self.Country.collection().delete_many({})
 
         # Create some defaults
         sweden = self.Country({

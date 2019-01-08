@@ -1,7 +1,11 @@
-# hfoswarmongo
-# ============
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+
+# Formal
+# ======
+#
 # Copyright 2013 Rob Britton
-# Copyright 2015 riot <riot@hackerfleet.org> and others.
+# Copyright 2015-2019 Heiko 'riot' Weinen <riot@c-base.org> and others.
 #
 # This file has been changed and this notice has been added in
 # accordance to the Apache License
@@ -19,13 +23,28 @@
 # limitations under the License.
 #
 
-''' Interface to pymongo '''
+
+"""
+Changes notice
+==============
+
+This file has been changed by the Hackerfleet Community and this notice has
+been added in accordance to the Apache License 2.0
+
+Description
+===========
+
+Interface to pymongo and sqlalchemy
+"""
 
 import pymongo
+import sqlalchemy
 
 
 class NotConnected(RuntimeError):
+    """Raised when a query is made without being connected to the database"""
     pass
+
 
 # List of all the databases we have connected to
 connections = {}
@@ -36,9 +55,20 @@ databases = {}
 # The first connection we make is the default database
 default_database = None
 
+sql_database = None
+
+
+def connect_sql(database, database_type='postgresql', username=None, password=None, host="localhost", port=5432):
+    """Connect an optional SQL database"""
+    global sql_database
+    #    'sqlite:///:memory:'
+    url = '{}://{}:{}@{}:{}/{}'
+    url = url.format(database_type, username, password, host, port, database)
+    sql_database = sqlalchemy.create_engine(url, echo=True)
+
 
 def connect(database, username=None, password=None, host="localhost", port=27017):
-    ''' Connect to a database. '''
+    """ Connect to a database. """
     global default_database
 
     identifier = (host, port)
@@ -50,7 +80,7 @@ def connect(database, username=None, password=None, host="localhost", port=27017
 
     connections[identifier] = connection
 
-    if not database in databases:
+    if database not in databases:
         db = connection[database]
 
         if username is not None and password is not None:
@@ -63,7 +93,7 @@ def connect(database, username=None, password=None, host="localhost", port=27017
 
 
 def get_database(database=None):
-    ''' Get a database by name, or the default database. '''
+    """ Get a database by name, or the default database. """
     global default_database
 
     # Check default
@@ -79,4 +109,6 @@ def get_database(database=None):
 
 
 def get_collection(collection, database=None):
+    """Get the collection of a database"""
+
     return get_database(database)[collection]

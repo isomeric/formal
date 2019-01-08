@@ -1,7 +1,11 @@
-# hfoswarmongo
-# ============
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+
+# Formal
+# ======
+#
 # Copyright 2013 Rob Britton
-# Copyright 2015 riot <riot@hackerfleet.org> and others.
+# Copyright 2015-2019 Heiko 'riot' Weinen <riot@c-base.org> and others.
 #
 # This file has been changed and this notice has been added in
 # accordance to the Apache License
@@ -17,6 +21,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+
+
+"""
+Changes notice
+==============
+
+This file has been changed by the Hackerfleet Community and this notice has
+been added in accordance to the Apache License 2.0
+
+"""
 
 from datetime import datetime
 
@@ -26,11 +41,7 @@ from bson import ObjectId
 from jsonschema import validate, Draft4Validator, validators
 from jsonschema.exceptions import ValidationError
 from bson.errors import InvalidId
-from .exceptions import InvalidSchemaException
-
-
-class OutdatedCodeException(Exception):
-    pass
+# from .exceptions import InvalidSchemaException
 
 
 ValidTypes = {
@@ -44,14 +55,18 @@ ValidTypes = {
 
 
 def extend_with_default(validator_class):
+    """Extend a validator by adding default functionality"""
+
     validate_properties = validator_class.VALIDATORS["properties"]
 
     def set_defaults(validator, properties, instance, schema):
-        for property, subschema in properties.items():
-            # print(property, subschema)
-            if "default" in subschema:
-                # print("Setting default: ", subschema['default'])
-                instance.setdefault(property, subschema["default"])
+        """Initially set defaults upon first validation"""
+
+        for prop, sub_schema in properties.items():
+            # print(property, sub_schema)
+            if "default" in sub_schema:
+                # print("Setting default: ", sub_schema['default'])
+                instance.setdefault(prop, sub_schema["default"])
 
         for error in validate_properties(
                 validator, properties, instance, schema,
@@ -68,13 +83,16 @@ DefaultValidatingDraft4Validator = extend_with_default(Draft4Validator)
 
 class ModelBase(object):
     """ This class serves as a base class for the main model types in
-    warmongo: Model, and TwistedModel. """
+    formal: Model, and TwistedModel. """
 
-    def __init__(self, origfields={}, from_find=False, *args, **kwargs):
+    def __init__(self, original_fields=None, from_find=False, *args, **kwargs):
         """ Creates an instance of the object."""
+        if original_fields is None:
+            original_fields = {}
+            
         self._from_find = from_find
 
-        fields = deepcopy(origfields)
+        fields = deepcopy(original_fields)
         has_id = False
         if '_id' in fields:
             try:
@@ -94,7 +112,7 @@ class ModelBase(object):
         self._fields = self.cast(fields)
         self.validate()
         if has_id:
-            self._fields['_id'] = origfields['_id']
+            self._fields['_id'] = original_fields['_id']
 
     def get(self, field, default=None):
         """ Get a field if it exists, otherwise return the default. """
@@ -132,7 +150,7 @@ class ModelBase(object):
         # self.validate_field("", self._schema, self._fields)
         try:
             pass
-            # TODO: Deepcopying for validation is probably not so good ;)
+            # TODO: Deep-copying for validation is probably not so good ;)
             fields = dict(self._fields)
             if '_id' in fields:
                 try:
@@ -168,7 +186,7 @@ class ModelBase(object):
                 "items"):
             return [
                 self.cast(value, schema["items"]) for value in fields
-                ]
+            ]
         elif value_type == "integer" and isinstance(fields, float):
             # The only thing that needs to be casted: floats -> ints
             return int(fields)
@@ -191,38 +209,37 @@ class ModelBase(object):
         else:
             raise AttributeError("Item has no attribute '%s'" % attr)
 
-
             # if attr.startswith('_'):
             #     return super(ModelBase, self).__getattr__(attr)
             #
             # if attr in self._schema["properties"] and attr in self._fields:
             #     #print("Direct hit")
             #     return self._fields.get(attr)
-            # curschema = self._schema["properties"]
-            # curfields = self._fields
+            # current_schema = self._schema["properties"]
+            # current_fields = self._fields
             # path = attr
-            # newattr = path
+            # new_attribute = path
             #
             # #print("Query path:", path)
-            # #print("Initial Fields:", curfields)
+            # #print("Initial Fields:", current_fields)
             #
             # while '.' in path:
             #
-            #     newattr, path = path.split('.', maxsplit=1)
-            #     #print("Looking for intermediate path in ", newattr, path)
+            #     new_attribute, path = path.split('.', maxsplit=1)
+            #     #print("Looking for intermediate path in ", new_attribute, path)
             #
-            #     if newattr in curschema and newattr in curfields:
-            #         curschema = curschema[newattr]['properties']
-            #         curfields = curfields[newattr]
+            #     if new_attribute in current_schema and new_attribute in current_fields:
+            #         current_schema = current_schema[new_attribute]['properties']
+            #         current_fields = current_fields[new_attribute]
             #     else:
         #         raise AttributeError("Item has no intermediate attribute '%s'"
-            #                              % ( newattr))
-            #
-            #
-            # if newattr in curschema and newattr in curfields:
-            #     return curfields.get(newattr)
-            # else:
-            #     raise AttributeError("Item has no attribute '%s'" % ( attr))
+        #                              % ( new_attribute))
+        #
+        #
+        # if new_attribute in current_schema and new_attribute in current_fields:
+        #     return current_fields.get(new_attribute)
+        # else:
+        #     raise AttributeError("Item has no attribute '%s'" % ( attr))
 
     def __setattr__(self, attr, value):
         """ Set one of the fields, with validation. Exception is on "private"
@@ -248,10 +265,12 @@ class ModelBase(object):
         self._fields[attr] = value
         return value
 
-    def update(self, newfields, updateId=False):
+    def update(self, new_fields, update_id=False):
+        """Updates an objects fields"""
+
         try:
-            for key, value in newfields.items():
-                if not key == "_id" or updateId:
+            for key, value in new_fields.items():
+                if not key == "_id" or update_id:
                     self.__setattr__(key, value)
         except Exception as e:
             raise ValidationError(

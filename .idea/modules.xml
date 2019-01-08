@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/warmongo.iml" filepath="$PROJECT_DIR$/.idea/warmongo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/formal.iml" filepath="$PROJECT_DIR$/.idea/formal.iml" />
     </modules>
   </component>
 </project>

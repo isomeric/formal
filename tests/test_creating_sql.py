@@ -4,7 +4,6 @@
 # Formal
 # ======
 #
-# Copyright 2013 Rob Britton
 # Copyright 2015-2019 Heiko 'riot' Weinen <riot@c-base.org> and others.
 #
 # This file has been changed and this notice has been added in
@@ -24,12 +23,7 @@
 #
 
 """
-Changes notice
-==============
-
-This file has been changed by the Hackerfleet Community and this notice has
-been added in accordance to the Apache License 2.0
-
+Test SQL support. WiP!
 """
 
 import unittest
@@ -37,58 +31,59 @@ import unittest
 import formal
 
 
-class TestCreating(unittest.TestCase):
-
+class TestCreatingSQL(unittest.TestCase):
     def setUp(self):
         """Set up the test scaffolding"""
         self.schema = {
             'name': 'Country',
-            "id": "#Country",
+            'sql': True,
+            'id': '#Country',
             'properties': {
                 'name': {'type': 'string'},
-                'abbreviation': {'type': 'string'},
-                'languages': {
-                    'type': ['array', 'null'],
-                    'items': {
-                        'type': 'string'
-                    }
-                }
+                'abbreviation': {'type': 'string', 'primary': True},
+                'dialcode': {'type': 'integer'}
             },
             'additionalProperties': False,
         }
 
-        # Connect to formal_test - hopefully it doesn't exist
-        formal.connect("formal_test")
+        formal.connect_sql(":memory:", 'sqlite', '', '', '', 0)
+
         self.Country = formal.model_factory(self.schema)
 
         # Drop all the data in it
-        self.Country.collection().delete_many({})
+        # self.Country.clear()
 
         # Create some defaults
         self.Country({
             "name": "Sweden",
             "abbreviation": "SE",
-            "languages": ["swedish"]
-        })
+            "dialcode": 46
+        }).save()
         self.Country({
             "name": "United States of America",
             "abbreviation": "US",
-            "languages": ["english"]
-        })
+            "dialcode": 1
+        }).save()
 
-    def testNormalCreate(self):
-        """ Test with doing things the Mongo way """
+    def testNormalCreateSQL(self):
+        """ Test with doing things the SQL way """
 
         canada = self.Country({
             "name": "Canada",
             "abbreviation": "CA",
-            "languages": ["english", "french"]
+            "dialcode": 1
         })
 
         canada.save()
 
+        country = self.Country.find({'dialcode': 1}, skip=1)
+
+        from pprint import pprint
+        for item in country:
+            pprint(item.serializablefields())
+
+        # canada.delete()
+
         self.assertEqual("Canada", canada.name)
         self.assertEqual("CA", canada.abbreviation)
-        self.assertEqual(2, len(canada.languages))
-        self.assertTrue("english" in canada.languages)
-        self.assertTrue("french" in canada.languages)
+        self.assertEqual(1, canada.dialcode)
