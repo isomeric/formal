@@ -68,7 +68,7 @@ class Model(ModelBase):
     def delete(self):
         """ Removes an object from the database. """
         try:
-            self.collection().remove({
+            self.collection().delete_one({
                 "_id": ObjectId(str(self._fields[
                                         '_id']))
             })
