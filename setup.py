@@ -63,7 +63,7 @@ them to MongoDB or SQL based databases.
 """,
     install_requires=[
         "pymongo>=3.2",
-        "jsonschema>=2.6.0",
+        "jsonschema==2.6.0",
         "deepdiff>=3.2.1",
         "sqlalchemy>=1.2.14"
     ],
