@@ -201,7 +201,12 @@ class Model(ModelBase):
         """
         if object_filter is None:
             object_filter = {}
-        return cls.collection().count_documents(object_filter)
+
+        # TODO: WTF. Yeah. I love deprecation warnings, too, pymongo.
+        if hasattr(cls.collection, 'count_documents'):
+            return cls.collection().count_documents(object_filter)
+        else:
+            return cls.collection().count(object_filter)
 
     @classmethod
     def collection(cls):
