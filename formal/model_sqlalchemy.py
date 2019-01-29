@@ -244,7 +244,7 @@ class Model(object):
 
         name = cls._schema['name']
 
-        query = "SELECT * FROM %s" % name
+        query = "SELECT %s FROM %s" % (",".join(cls._schema['properties'].keys()), name)
 
         if len(args) > 0:
             query += " WHERE"
