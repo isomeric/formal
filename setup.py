@@ -40,7 +40,6 @@ import setuptools
 
 setuptools.setup(
     name="formal",
-    version="0.6.0",
     description="JSON-Schema-based ORM for MongoDB and SQLAlchemy",
     author="Heiko 'riot' Weinen",
     author_email="riot@c-base.org",
@@ -67,5 +66,11 @@ them to MongoDB or SQL based databases.
         "deepdiff>=3.2.1",
         "sqlalchemy>=1.2.14"
     ],
-    test_suite="tests"
+    test_suite="tests",
+    use_scm_version={
+        "write_to": "formal/scm_version.py",
+    },
+    setup_requires=[
+        "setuptools_scm"
+    ],
 )
