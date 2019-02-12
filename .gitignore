@@ -1,5 +1,8 @@
 *.py[cod]
 
+# SCM versioning
+formal/scm_version.py
+
 # C extensions
 *.so
 
