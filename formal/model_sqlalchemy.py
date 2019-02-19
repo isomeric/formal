@@ -35,7 +35,7 @@ from jsonschema import validate, Draft4Validator, validators
 from jsonschema.exceptions import ValidationError
 from copy import copy, deepcopy
 
-# from pprint import pprint
+from pprint import pprint
 
 
 class Model(object):
@@ -100,6 +100,7 @@ class Model(object):
         """ Saves an object to the database. """
         self.validate()
 
+        #print(**self._fields)
         insert = self._table.insert().values(**self._fields)
         result = self._engine.execute(insert)
         return result.inserted_primary_key
@@ -243,11 +244,13 @@ class Model(object):
         sort = kwargs.get('sort', False)
 
         name = cls._schema['name']
+        # print('Yeeaaah, i\'m building a query right now... it might not have a', name)
 
         query = "SELECT %s FROM %s" % (",".join(cls._schema['properties'].keys()), name)
 
-        if len(args) > 0:
+        if len(args) > 0 and not args[0] == {}:
             query += " WHERE"
+            # pprint(args)
 
         for item in args:
             for key, value in item.items():
@@ -268,8 +271,10 @@ class Model(object):
 
     @classmethod
     def find_one(cls, *args, **kwargs):
-        """ Finds a single object from this collection. """
-        result = cls.collection().find_one(*args, **kwargs)
+        """Finds a single object from this collection."""
+
+        result = cls._find(*args, **kwargs).fetchone()
+        # pprint(result)
         if result is not None:
             return cls(result)
         return None
@@ -277,10 +282,14 @@ class Model(object):
     @classmethod
     def count(cls, *args, **kwargs):
         """ Counts the number of items:
-            - not the same as pymongo's count, this is the equivalent to:
-                collection.find(*args, **kwargs).count()
+
         """
-        return cls.collection().find(*args, **kwargs).count()
+        name = cls._schema['name']
+
+        query = "SELECT COUNT(*) FROM %s" % name
+        proxy = cls._engine.execute(query).scalar()
+
+        return int(proxy)
 
     @classmethod
     def clear(cls):
@@ -467,9 +476,15 @@ class Model(object):
 
         if attr in self._schema["properties"]:
             # Check the field against our schema
-            validator = deepcopy(self)
-            validator._fields[attr] = value
-            validator.validate()
+            original = self._fields[attr]
+            self._fields[attr] = value
+
+            try:
+                self.validate()
+            except ValidationError as e:
+                self._fields[attr] = original
+                raise e
+
         elif not self._schema.get("additionalProperties", True):
             # not allowed to add additional properties
             raise ValidationError(
@@ -481,10 +496,11 @@ class Model(object):
     def update(self, new_fields, update_id=False):
         """Update an object's fields"""
 
-        try:
+        #try:
+        if True:
             for key, value in new_fields.items():
                 if not key == "_id" or update_id:
                     self.__setattr__(key, value)
-        except Exception as e:
-            raise ValidationError(
-                "Unknown Validation error: '%s' (%s)" % (e, type(e)))
+        #except Exception as e:
+        #    raise ValidationError(
+        #        "Unknown Validation error: '%s' (%s)" % (e, type(e)))
