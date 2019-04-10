@@ -46,6 +46,7 @@ setuptools.setup(
     url="http://github.com/isomeric/formal",
     keywords=["mongodb", "sqlalchemy", "jsonschema", "orm"],
     packages=["formal"],
+    scripts=["tools/sqlconverter"],
     classifiers=[
         "Programming Language :: Python",
         "License :: OSI Approved :: Apache Software License",
@@ -62,7 +63,7 @@ them to MongoDB or SQL based databases.
 """,
     install_requires=[
         "pymongo>=3.2",
-        "jsonschema==2.6.0",
+        "jsonschema>=3.0.1",
         "deepdiff>=3.2.1",
         "sqlalchemy>=1.2.14"
     ],
