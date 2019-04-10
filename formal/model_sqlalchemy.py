@@ -74,7 +74,7 @@ class Model(object):
 
         self._engine = sql_database
 
-        fields = deepcopy(original_fields)
+        fields = deepcopy(dict(original_fields))
         has_id = False
         if '_id' in fields:
             has_id = True
