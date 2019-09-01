@@ -101,7 +101,7 @@ issues_github_path = 'isomeric/formal'
 # built documents.
 #
 # The short X.Y version.
-version = ".".join(map(str, version_module.version_info.split('.')[:2]))
+version = ".".join(version_module.version_info[:2])
 # The full version, including alpha/beta/rc tags.
 release = version_module.version
 
