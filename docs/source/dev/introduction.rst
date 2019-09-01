@@ -15,8 +15,8 @@ documentation <environment>`.
 Communication
 -------------
 
-- `IRC Channel`_ on the `FreeNode IRC Network`_
-- `Issue Tracker`_
+- `#hackerfleet IRC Channel`_ on the `FreeNode IRC Network`_
+- `Issue Tracker`_ located at `https://github.com/isomeric/formal/issues`
 
 
 .. note:: If you are familiar with `IRC <http://en.wikipedia.org/wiki/Internet_Relay_Chat>`_
