@@ -45,21 +45,15 @@ class TestValidation(unittest.TestCase):
             "properties": {
                 "field": {
                     "type": "object",
-                    "properties": {
-                        "subfield": {"type": "integer"}
-                    }
+                    "properties": {"subfield": {"type": "integer"}},
                 }
-            }
+            },
         }
         model = formal.model_factory(schema)
 
         m = model()
 
-        old_fields = {
-            "field": {
-                "subfield": 5.2
-            }
-        }
+        old_fields = {"field": {"subfield": 5.2}}
 
         fields = m.cast(old_fields)
 
@@ -69,22 +63,13 @@ class TestValidation(unittest.TestCase):
         schema = {
             "name": "Model",
             "id": "#Model",
-            "properties": {
-                "field": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
+            "properties": {"field": {"type": "array", "items": {"type": "integer"}}},
         }
         model = formal.model_factory(schema)
 
         m = model()
 
-        old_fields = {
-            "field": [5.2, 7]
-        }
+        old_fields = {"field": [5.2, 7]}
 
         fields = m.cast(old_fields)
 
@@ -98,16 +83,13 @@ class TestValidation(unittest.TestCase):
             "properties": {
                 "field": {"type": "integer"},
                 "other_field": {"type": "string"},
-            }
+            },
         }
         model = formal.model_factory(schema)
 
         m = model()
 
-        old_fields = {
-            "field": 5.2,
-            "other_field": "5"
-        }
+        old_fields = {"field": 5.2, "other_field": "5"}
 
         fields = m.cast(old_fields)
 

@@ -41,19 +41,14 @@ class TestCreating(unittest.TestCase):
     def setUp(self):
         """Set up the test scaffolding"""
         self.schema = {
-            'name': 'Country',
+            "name": "Country",
             "id": "#Country",
-            'properties': {
-                'name': {'type': 'string'},
-                'abbreviation': {'type': 'string'},
-                'languages': {
-                    'type': ['array', 'null'],
-                    'items': {
-                        'type': 'string'
-                    }
-                }
+            "properties": {
+                "name": {"type": "string"},
+                "abbreviation": {"type": "string"},
+                "languages": {"type": ["array", "null"], "items": {"type": "string"}},
             },
-            'additionalProperties': False,
+            "additionalProperties": False,
         }
 
         # Connect to formal_test - hopefully it doesn't exist
@@ -64,11 +59,9 @@ class TestCreating(unittest.TestCase):
         self.Country.collection().delete_many({})
 
         # Create some defaults
-        sweden = self.Country({
-            "name": "Sweden",
-            "abbreviation": "SE",
-            "languages": ["swedish"]
-        })
+        sweden = self.Country(
+            {"name": "Sweden", "abbreviation": "SE", "languages": ["swedish"]}
+        )
 
         sweden.save()
 
@@ -111,7 +104,7 @@ class TestCreating(unittest.TestCase):
         self.assertEqual("Sweden", sweden.name)
 
         # Update Sweden and store it back
-        sweden.update({'name': "Sverige", '_id': str(sweden._fields['_id'])})
+        sweden.update({"name": "Sverige", "_id": str(sweden._fields["_id"])})
         sweden.validate()
         sweden.save()
 

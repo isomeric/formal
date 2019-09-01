@@ -41,19 +41,14 @@ class TestFinding(unittest.TestCase):
     def setUp(self):
         """Set up the test scaffolding"""
         self.schema = {
-            'name': 'Country',
+            "name": "Country",
             "id": "#Country",
-            'properties': {
-                'name': {'type': 'string'},
-                'abbreviation': {'type': 'string'},
-                'languages': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'string'
-                    }
-                }
+            "properties": {
+                "name": {"type": "string"},
+                "abbreviation": {"type": "string"},
+                "languages": {"type": "array", "items": {"type": "string"}},
             },
-            'additionalProperties': False,
+            "additionalProperties": False,
         }
 
         # Connect to formal_test - hopefully it doesn't exist
@@ -64,17 +59,17 @@ class TestFinding(unittest.TestCase):
         self.Country.collection().delete_many({})
 
         # Create some defaults
-        sweden = self.Country({
-            "name": "Sweden",
-            "abbreviation": "SE",
-            "languages": ["swedish"]
-        })
+        sweden = self.Country(
+            {"name": "Sweden", "abbreviation": "SE", "languages": ["swedish"]}
+        )
         sweden.save()
-        usa = self.Country({
-            "name": "United States of America",
-            "abbreviation": "US",
-            "languages": ["english"]
-        })
+        usa = self.Country(
+            {
+                "name": "United States of America",
+                "abbreviation": "US",
+                "languages": ["english"],
+            }
+        )
         usa.save()
 
     def testFindOne(self):

@@ -43,6 +43,7 @@ import sqlalchemy
 
 class NotConnected(RuntimeError):
     """Raised when a query is made without being connected to the database"""
+
     pass
 
 
@@ -58,14 +59,21 @@ default_database = None
 sql_database = None
 
 
-def connect_sql(database, database_type='postgresql', username=None, password=None, host="localhost", port=5432):
+def connect_sql(
+    database,
+    database_type="postgresql",
+    username=None,
+    password=None,
+    host="localhost",
+    port=5432,
+):
     """Connect an optional SQL database"""
     global sql_database
 
-    if database_type == 'sql_memory':
-        url = 'sqlite:///:memory:'
+    if database_type == "sql_memory":
+        url = "sqlite:///:memory:"
     else:
-        url = '{}://{}:{}@{}:{}/{}'
+        url = "{}://{}:{}@{}:{}/{}"
         url = url.format(database_type, username, password, host, port, database)
 
     sql_database = sqlalchemy.create_engine(url, echo=True)

@@ -36,6 +36,7 @@ import unittest
 from bson import ObjectId
 
 import formal
+
 # from formal.exceptions import ValidationError
 from jsonschema.exceptions import ValidationError
 
@@ -45,49 +46,30 @@ class TestValidation(unittest.TestCase):
         schema = {
             "name": "Model",
             "id": "#Model",
-            "properties": {
-                "field": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
+            "properties": {"field": {"type": "array", "items": {"type": "string"}}},
         }
 
         model = formal.model_factory(schema)
 
-        m = model({
-            "field": ["asdf", "hello"]
-        })
+        m = model({"field": ["asdf", "hello"]})
 
         self.assertEqual(2, len(m.field))
         self.assertEqual("asdf", m.field[0])
-        self.assertRaises(ValidationError, model, {
-            "field": "hi"
-        })
+        self.assertRaises(ValidationError, model, {"field": "hi"})
 
     def testValidateString(self):
         schema = {
             "name": "Model",
             "id": "#Model",
-            "properties": {
-                "field": {
-                    "type": "string"
-                }
-            }
+            "properties": {"field": {"type": "string"}},
         }
 
         model = formal.model_factory(schema)
 
-        m = model({
-            "field": "asdf"
-        })
+        m = model({"field": "asdf"})
 
         self.assertEqual("asdf", m.field)
-        self.assertRaises(ValidationError, model, {
-            "field": 5
-        })
+        self.assertRaises(ValidationError, model, {"field": 5})
 
     def testValidateObject(self):
         schema = {
@@ -96,50 +78,34 @@ class TestValidation(unittest.TestCase):
             "properties": {
                 "field": {
                     "type": "object",
-                    "properties": {
-                        "subfield": {"type": "string"}
-                    }
+                    "properties": {"subfield": {"type": "string"}},
                 }
-            }
+            },
         }
 
         model = formal.model_factory(schema)
 
-        m = model({
-            "field": {"subfield": "asdf"}
-        })
+        m = model({"field": {"subfield": "asdf"}})
 
         self.assertEqual("asdf", m.field["subfield"])
-        self.assertRaises(ValidationError, model, {
-            "field": "hi"
-        })
+        self.assertRaises(ValidationError, model, {"field": "hi"})
 
     def testValidateNumber(self):
         schema = {
             "name": "Model",
             "id": "#Model",
-            "properties": {
-                "field": {
-                    "type": "number"
-                }
-            }
+            "properties": {"field": {"type": "number"}},
         }
 
         model = formal.model_factory(schema)
 
-        m = model({
-            "field": 5.5
-        })
+        m = model({"field": 5.5})
 
         self.assertEqual(5.5, m.field)
-        self.assertRaises(ValidationError, model, {
-            "field": "hi"
-        })
+        self.assertRaises(ValidationError, model, {"field": "hi"})
 
         # using an int should still work
-        m = model({
-            "field": 5
-        })
+        m = model({"field": 5})
 
         self.assertEqual(5, m.field)
 
@@ -147,23 +113,15 @@ class TestValidation(unittest.TestCase):
         schema = {
             "name": "Model",
             "id": "#Model",
-            "properties": {
-                "field": {
-                    "type": ["string", "null"]
-                }
-            }
+            "properties": {"field": {"type": ["string", "null"]}},
         }
 
         model = formal.model_factory(schema)
 
-        m = model({
-            "field": "asdf"
-        })
+        m = model({"field": "asdf"})
 
         self.assertEqual("asdf", m.field)
-        self.assertRaises(ValidationError, model, {
-            "field": 5
-        })
+        self.assertRaises(ValidationError, model, {"field": 5})
 
         m.field = None
 
@@ -177,57 +135,39 @@ class TestValidation(unittest.TestCase):
                 "_id": {
                     "type": "string",
                     "pattern": "^(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)",
-                    "additionalProperties": False
+                    "additionalProperties": False,
                 }
-            }
+            },
         }
 
         model = formal.model_factory(schema)
 
-        m = model({
-            "_id": str(ObjectId("45cbc4a0e4123f6920000002"))
-        })
+        m = model({"_id": str(ObjectId("45cbc4a0e4123f6920000002"))})
 
         self.assertEqual(ObjectId("45cbc4a0e4123f6920000002"), ObjectId(m._id))
-        self.assertRaises(ValidationError, model, {
-            "_id": "hi"
-        })
+        self.assertRaises(ValidationError, model, {"_id": "hi"})
 
     def testValidateInteger(self):
         schema = {
             "name": "Model",
             "id": "#Model",
-            "properties": {
-                "field": {
-                    "type": "integer"
-                }
-            }
+            "properties": {"field": {"type": "integer"}},
         }
 
         model = formal.model_factory(schema)
 
-        self.assertRaises(ValidationError, model, {
-            "field": "hi"
-        })
+        self.assertRaises(ValidationError, model, {"field": "hi"})
 
     def testValidateBool(self):
         schema = {
             "name": "Model",
             "id": "#Model",
-            "properties": {
-                "field": {
-                    "type": "boolean"
-                }
-            }
+            "properties": {"field": {"type": "boolean"}},
         }
 
         model = formal.model_factory(schema)
 
-        m = model({
-            "field": False
-        })
+        m = model({"field": False})
 
         self.assertEqual(False, m.field)
-        self.assertRaises(ValidationError, model, {
-            "field": "hi"
-        })
+        self.assertRaises(ValidationError, model, {"field": "hi"})

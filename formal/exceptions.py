@@ -36,11 +36,13 @@ been added in accordance to the Apache License 2.0
 
 class InvalidSchemaException(Exception):
     """ Thrown when we have discovered an invalid schema. """
+
     pass
 
 
 class ValidationError(Exception):
     """ Thrown when a field does not match the schema. """
+
     pass
 
 

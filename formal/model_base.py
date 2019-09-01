@@ -41,6 +41,7 @@ from bson import ObjectId
 from jsonschema import validate, Draft4Validator, validators
 from jsonschema.exceptions import ValidationError
 from bson.errors import InvalidId
+
 # from .exceptions import InvalidSchemaException
 
 
@@ -50,7 +51,7 @@ ValidTypes = {
     "number": float,
     "string": str,
     "object_id": ObjectId,
-    "date": datetime
+    "date": datetime,
 }
 
 
@@ -68,14 +69,10 @@ def extend_with_default(validator_class):
                 # print("Setting default: ", sub_schema['default'])
                 instance.setdefault(prop, sub_schema["default"])
 
-        for error in validate_properties(
-                validator, properties, instance, schema,
-        ):
+        for error in validate_properties(validator, properties, instance, schema):
             yield error
 
-    return validators.extend(
-        validator_class, {"properties": set_defaults},
-    )
+    return validators.extend(validator_class, {"properties": set_defaults})
 
 
 DefaultValidatingDraft4Validator = extend_with_default(Draft4Validator)
@@ -89,18 +86,18 @@ class ModelBase(object):
         """ Creates an instance of the object."""
         if original_fields is None:
             original_fields = {}
-            
+
         self._from_find = from_find
 
         fields = deepcopy(original_fields)
         has_id = False
-        if '_id' in fields:
+        if "_id" in fields:
             try:
-                _ = ObjectId(fields['_id'])
+                _ = ObjectId(fields["_id"])
             except InvalidId:
-                raise ValidationError('Invalid object ID: ', fields['_id'])
+                raise ValidationError("Invalid object ID: ", fields["_id"])
             has_id = True
-            del fields['_id']
+            del fields["_id"]
 
         # populate any default fields for objects that haven't come from the DB
         if not from_find:
@@ -112,7 +109,7 @@ class ModelBase(object):
         self._fields = self.cast(fields)
         self.validate()
         if has_id:
-            self._fields['_id'] = original_fields['_id']
+            self._fields["_id"] = original_fields["_id"]
 
     def get(self, field, default=None):
         """ Get a field if it exists, otherwise return the default. """
@@ -123,15 +120,11 @@ class ModelBase(object):
         """ Get the collection associated with this class. """
         name = cls._schema.get(
             "collectionName",
-            cls._schema.get(
-                "collectionName",
-                cls._schema.get("name",
-                                cls.__name__)
-            )
+            cls._schema.get("collectionName", cls._schema.get("name", cls.__name__)),
         )
 
         # convert to snake case
-        name = (name[0] + re.sub('([A-Z])', r'_\1', name[1:])).lower()
+        name = (name[0] + re.sub("([A-Z])", r"_\1", name[1:])).lower()
 
         return name
 
@@ -152,20 +145,21 @@ class ModelBase(object):
             pass
             # TODO: Deep-copying for validation is probably not so good ;)
             fields = dict(self._fields)
-            if '_id' in fields:
+            if "_id" in fields:
                 try:
-                    _ = ObjectId(fields['_id'])
+                    _ = ObjectId(fields["_id"])
                 except InvalidId:
-                    raise ValidationError('Invalid object ID: ', fields['_id'])
+                    raise ValidationError("Invalid object ID: ", fields["_id"])
 
                 # Now remove for schema validation (jsonschema knows nothing
                 #  off object ids)
-                del (fields['_id'])
+                del fields["_id"]
 
             validate(fields, self._schema)
         except ValidationError as e:
             raise ValidationError(
-                "Error:\n" + str(e) + "\nFields:\n" + str(self._fields))
+                "Error:\n" + str(e) + "\nFields:\n" + str(self._fields)
+            )
 
     def cast(self, fields, schema=None):
         """ Cast the fields from Mongo into our format - necessary to convert
@@ -175,18 +169,17 @@ class ModelBase(object):
 
         value_type = schema.get("type", "object")
 
-        if value_type == "object" and isinstance(fields, dict) and \
-                schema.get("properties"):
+        if (
+            value_type == "object"
+            and isinstance(fields, dict)
+            and schema.get("properties")
+        ):
             result = dict()
             for key, value in fields.items():
-                result[key] = self.cast(value,
-                                        schema["properties"].get(key, {}))
+                result[key] = self.cast(value, schema["properties"].get(key, {}))
             return result
-        elif value_type == "array" and isinstance(fields, list) and schema.get(
-                "items"):
-            return [
-                self.cast(value, schema["items"]) for value in fields
-            ]
+        elif value_type == "array" and isinstance(fields, list) and schema.get("items"):
+            return [self.cast(value, schema["items"]) for value in fields]
         elif value_type == "integer" and isinstance(fields, float):
             # The only thing that needs to be casted: floats -> ints
             return int(fields)
@@ -245,9 +238,9 @@ class ModelBase(object):
         """ Set one of the fields, with validation. Exception is on "private"
         fields - the ones that start with _. """
         if attr.startswith("_"):
-            if attr == '_id':
+            if attr == "_id":
                 try:
-                    self._fields['_id'] = ObjectId(value)
+                    self._fields["_id"] = ObjectId(value)
                 except InvalidId:
                     raise ValidationError("Invalid ObjectId")
             return object.__setattr__(self, attr, value)
@@ -259,8 +252,7 @@ class ModelBase(object):
             validator.validate()
         elif not self._schema.get("additionalProperties", True):
             # not allowed to add additional properties
-            raise ValidationError(
-                "Additional property '%s' not allowed!" % attr)
+            raise ValidationError("Additional property '%s' not allowed!" % attr)
 
         self._fields[attr] = value
         return value
@@ -273,5 +265,4 @@ class ModelBase(object):
                 if not key == "_id" or update_id:
                     self.__setattr__(key, value)
         except Exception as e:
-            raise ValidationError(
-                "Unknown Validation error: '%s' (%s)" % (e, type(e)))
+            raise ValidationError("Unknown Validation error: '%s' (%s)" % (e, type(e)))

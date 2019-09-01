@@ -60,17 +60,19 @@ def model_factory(schema, base_class=formalModel):
 
     if not schema.get("name"):
         raise InvalidSchemaException(
-            "formal models require a top-level 'name' attribute!")
+            "formal models require a top-level 'name' attribute!"
+        )
 
-    if schema.get('sql', False):
+    if schema.get("sql", False):
         print("SQL Schema detected!")
         base_class = SQLModel
 
         from .database import sql_database
+
         engine = sql_database
         primary = None
-        for item in schema['properties']:
-            thing = schema['properties'][item].get('primary', False)
+        for item in schema["properties"]:
+            thing = schema["properties"][item].get("primary", False)
             if thing is not False:
                 assert primary is None
                 primary = item

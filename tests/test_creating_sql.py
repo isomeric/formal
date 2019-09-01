@@ -35,18 +35,18 @@ class TestCreatingSQL(unittest.TestCase):
     def setUp(self):
         """Set up the test scaffolding"""
         self.schema = {
-            'name': 'Country',
-            'sql': True,
-            'id': '#Country',
-            'properties': {
-                'name': {'type': 'string'},
-                'abbreviation': {'type': 'string', 'primary': True},
-                'dialcode': {'type': 'integer'}
+            "name": "Country",
+            "sql": True,
+            "id": "#Country",
+            "properties": {
+                "name": {"type": "string"},
+                "abbreviation": {"type": "string", "primary": True},
+                "dialcode": {"type": "integer"},
             },
-            'additionalProperties': False,
+            "additionalProperties": False,
         }
 
-        formal.connect_sql(":memory:", 'sqlite', '', '', '', 0)
+        formal.connect_sql(":memory:", "sqlite", "", "", "", 0)
 
         self.Country = formal.model_factory(self.schema)
 
@@ -54,31 +54,22 @@ class TestCreatingSQL(unittest.TestCase):
         # self.Country.clear()
 
         # Create some defaults
-        self.Country({
-            "name": "Sweden",
-            "abbreviation": "SE",
-            "dialcode": 46
-        }).save()
-        self.Country({
-            "name": "United States of America",
-            "abbreviation": "US",
-            "dialcode": 1
-        }).save()
+        self.Country({"name": "Sweden", "abbreviation": "SE", "dialcode": 46}).save()
+        self.Country(
+            {"name": "United States of America", "abbreviation": "US", "dialcode": 1}
+        ).save()
 
     def testNormalCreateSQL(self):
         """ Test with doing things the SQL way """
 
-        canada = self.Country({
-            "name": "Canada",
-            "abbreviation": "CA",
-            "dialcode": 1
-        })
+        canada = self.Country({"name": "Canada", "abbreviation": "CA", "dialcode": 1})
 
         canada.save()
 
-        country = self.Country.find({'dialcode': 1}, skip=1)
+        country = self.Country.find({"dialcode": 1}, skip=1)
 
         from pprint import pprint
+
         for item in country:
             pprint(item.serializablefields())
 

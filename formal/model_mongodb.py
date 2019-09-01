@@ -56,22 +56,20 @@ class Model(ModelBase):
         if result:
             self._fields = self.cast(result._fields)
         else:
-            raise InvalidReloadException("No object in the database with ID %s" % self._id)
+            raise InvalidReloadException(
+                "No object in the database with ID %s" % self._id
+            )
 
     def save(self, *args, **kwargs):
         """ Saves an object to the database. """
         self.validate()
 
-        self._fields['_id'] = self.collection().save(self._fields, *args,
-                                                            **kwargs)
+        self._fields["_id"] = self.collection().save(self._fields, *args, **kwargs)
 
     def delete(self):
         """ Removes an object from the database. """
         try:
-            self.collection().delete_one({
-                "_id": ObjectId(str(self._fields[
-                                        '_id']))
-            })
+            self.collection().delete_one({"_id": ObjectId(str(self._fields["_id"]))})
         except Exception as e:
             print("Uh oh: ", e, type(e))
 
@@ -80,10 +78,10 @@ class Model(ModelBase):
 
         result = copy(self._fields)
 
-        result['id'] = self._schema['id']
+        result["id"] = self._schema["id"]
 
-        if '_id' in result:
-            result['_id'] = str(result['_id'])
+        if "_id" in result:
+            result["_id"] = str(result["_id"])
 
         return result
 
@@ -203,7 +201,7 @@ class Model(ModelBase):
             object_filter = {}
 
         # TODO: WTF. Yeah. I love deprecation warnings, too, pymongo.
-        if hasattr(cls.collection, 'count_documents'):
+        if hasattr(cls.collection, "count_documents"):
             return cls.collection().count_documents(object_filter)
         else:
             return cls.collection().count(object_filter)
@@ -213,5 +211,6 @@ class Model(ModelBase):
         """ Get the pymongo collection object for this model. Useful for
         features not supported by formal like aggregate queries and
         map-reduce. """
-        return formal.database.get_collection(collection=cls.collection_name(),
-                                              database=cls.database_name())
+        return formal.database.get_collection(
+            collection=cls.collection_name(), database=cls.database_name()
+        )
