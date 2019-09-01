@@ -47,7 +47,7 @@ is to install and user Docker or a virtual machine*
 
 To install on Windows, you'll need to install these packages first:
 
- * Python >=3.3 https://www.python.org/downloads/windows/
+ * Python >=3.4 https://www.python.org/downloads/windows/
  * MongoDB https://www.mongodb.org/downloads#production
  * pymongo
  * sqlalchemy
