@@ -35,8 +35,6 @@ from jsonschema import validate, Draft4Validator, validators
 from jsonschema.exceptions import ValidationError
 from copy import copy, deepcopy
 
-from pprint import pprint
-
 
 class Model(object):
     """The SQL object model class"""
@@ -45,40 +43,41 @@ class Model(object):
         """ Creates an instance of the object."""
         if original_fields is None:
             original_fields = {}
-            
+
         self._from_find = from_find
 
         metadata = sql.MetaData()
 
-        self._table = sql.Table(self._schema['name'], metadata)
-        for item, value in self._schema['properties'].items():
+        self._table = sql.Table(self._schema["name"], metadata)
+        for item, value in self._schema["properties"].items():
             # print(item)
-            column_type = value['type'].upper()
-            primary = value.get('primary', False)
+            column_type = value["type"].upper()
+            primary = value.get("primary", False)
 
             if primary:
                 self._primary = item
 
             column = sql.String(64)
 
-            if column_type == 'INTEGER':
+            if column_type == "INTEGER":
                 column = sql.Integer
-            elif column_type == 'STRING':
-                length = value.get('length', 64)
+            elif column_type == "STRING":
+                length = value.get("length", 64)
                 column = sql.String(length)
 
             self._table.append_column(sql.Column(item, column, primary_key=primary))
 
         from .database import sql_database
+
         metadata.create_all(sql_database)
 
         self._engine = sql_database
 
         fields = deepcopy(dict(original_fields))
         has_id = False
-        if '_id' in fields:
+        if "_id" in fields:
             has_id = True
-            del fields['_id']
+            del fields["_id"]
 
         # populate any default fields for objects that haven't come from the DB
         if not from_find:
@@ -90,7 +89,7 @@ class Model(object):
         self._fields = self.cast(fields)
         self.validate()
         if has_id:
-            self._fields['_id'] = original_fields['_id']
+            self._fields["_id"] = original_fields["_id"]
 
     def reload(self):
         """ Reload this object's data from the DB. """
@@ -100,7 +99,7 @@ class Model(object):
         """ Saves an object to the database. """
         self.validate()
 
-        #print(**self._fields)
+        # print(**self._fields)
         insert = self._table.insert().values(**self._fields)
         result = self._engine.execute(insert)
         return result.inserted_primary_key
@@ -110,11 +109,16 @@ class Model(object):
 
         primary = self._fields[self._primary]
 
-        query = "DELETE FROM {table_name} WHERE {table_name}.{primary_key} = {primary}".format(**{
-            'table_name': self._schema['name'],
-            'primary_key': self._primary,
-            'primary': primary
-        })
+        query = (
+            "DELETE FROM {table_name}"
+            " WHERE {table_name}.{primary_key} = {primary}".format(
+                **{
+                    "table_name": self._schema["name"],
+                    "primary_key": self._primary,
+                    "primary": primary,
+                }
+            )
+        )
 
         delete = sql.text(query)
         result = self._engine.execute(delete)
@@ -124,10 +128,10 @@ class Model(object):
         """Return serializable fields of the object"""
         result = copy(self._fields)
 
-        result['id'] = self._schema['id']
+        result["id"] = self._schema["id"]
 
-        if '_id' in result:
-            result['_id'] = str(result['_id'])
+        if "_id" in result:
+            result["_id"] = str(result["_id"])
 
         return result
 
@@ -168,8 +172,7 @@ class Model(object):
                 options[option] = kwargs[option]
                 del options[option]
 
-        if "batch_size" in options and "skip" not in options and "limit" not \
-                in options:
+        if "batch_size" in options and "skip" not in options and "limit" not in options:
             # run things in batches
             current_skip = 0
             limit = options["batch_size"]
@@ -208,7 +211,7 @@ class Model(object):
 
     @classmethod
     def _transform_object(cls, thing):
-        return dict(zip(cls._schema['properties'], thing))
+        return dict(zip(cls._schema["properties"], thing))
 
     @classmethod
     def find_by_id(cls, obj_id, **kwargs):
@@ -240,13 +243,12 @@ class Model(object):
     def _find(cls, *args, **kwargs):
         # pprint(args)
         # pprint(kwargs)
-        limit = kwargs.get('limit', False)
-        sort = kwargs.get('sort', False)
+        limit = kwargs.get("limit", False)
+        sort = kwargs.get("sort", False)
 
-        name = cls._schema['name']
-        # print('Yeeaaah, i\'m building a query right now... it might not have a', name)
+        name = cls._schema["name"]
 
-        query = "SELECT %s FROM %s" % (",".join(cls._schema['properties'].keys()), name)
+        query = "SELECT %s FROM %s" % (",".join(cls._schema["properties"].keys()), name)
 
         if len(args) > 0 and not args[0] == {}:
             query += " WHERE"
@@ -258,7 +260,7 @@ class Model(object):
                     value = "'%s'" % value
                 query += " %s.%s = %s AND" % (name, key, value)
 
-        query = query.rstrip(' AND')
+        query = query.rstrip(" AND")
 
         if sort is not False:
             query += " ORDER BY %s %s" % (sort[0], sort[1])
@@ -284,7 +286,7 @@ class Model(object):
         """ Counts the number of items:
 
         """
-        name = cls._schema['name']
+        name = cls._schema["name"]
 
         query = "SELECT COUNT(*) FROM %s" % name
         proxy = cls._engine.execute(query).scalar()
@@ -295,9 +297,7 @@ class Model(object):
     def clear(cls):
         """Clear a collection"""
 
-        query = "DELETE FROM {table_name}".format(**{
-            'table_name': cls._schema['name'],
-        })
+        query = "DELETE FROM {table_name}".format(**{"table_name": cls._schema["name"]})
 
         clear = sql.text(query)
         result = cls._engine.execute(clear)
@@ -332,17 +332,22 @@ class Model(object):
                 """Apply all diffs in a patch to an object"""
 
                 for diff in migration_patch:
-                    print('Would now apply ', diff, migration_patch[diff], 'to',
-                          migration_thing.name)
+                    print(
+                        "Would now apply ",
+                        diff,
+                        migration_patch[diff],
+                        "to",
+                        migration_thing.name,
+                    )
 
             for thing in cls.collection().find_all():
                 migrate_thing(thing, patch)
 
         for key in patchset:
-            print('Applying patch', key)
+            print("Applying patch", key)
             apply_patch(patchset[key])
 
-    ###################################################################################################################
+    ####################################################################################
 
     def get(self, field, default=None):
         """ Get a field if it exists, otherwise return the default. """
@@ -353,15 +358,11 @@ class Model(object):
         """ Get the collection associated with this class. """
         name = cls._schema.get(
             "collectionName",
-            cls._schema.get(
-                "collectionName",
-                cls._schema.get("name",
-                                cls.__name__)
-            )
+            cls._schema.get("collectionName", cls._schema.get("name", cls.__name__)),
         )
 
         # convert to snake case
-        name = (name[0] + re.sub('([A-Z])', r'_\1', name[1:])).lower()
+        name = (name[0] + re.sub("([A-Z])", r"_\1", name[1:])).lower()
 
         return name
 
@@ -382,15 +383,16 @@ class Model(object):
             pass
             # TODO: Deep-copying for validation is probably not so good ;)
             fields = dict(self._fields)
-            if '_id' in fields:
+            if "_id" in fields:
                 # Now remove for schema validation (jsonschema knows nothing
                 #  off object ids)
-                del (fields['_id'])
+                del fields["_id"]
 
             validate(fields, self._schema)
         except ValidationError as e:
             raise ValidationError(
-                "Error:\n" + str(e) + "\nFields:\n" + str(self._fields))
+                "Error:\n" + str(e) + "\nFields:\n" + str(self._fields)
+            )
 
     def cast(self, fields, schema=None):
         """ Cast the fields from Mongo into our format - necessary to convert
@@ -400,18 +402,17 @@ class Model(object):
 
         value_type = schema.get("type", "object")
 
-        if value_type == "object" and isinstance(fields, dict) and \
-                schema.get("properties"):
+        if (
+            value_type == "object"
+            and isinstance(fields, dict)
+            and schema.get("properties")
+        ):
             result = dict()
             for key, value in fields.items():
-                result[key] = self.cast(value,
-                                        schema["properties"].get(key, {}))
+                result[key] = self.cast(value, schema["properties"].get(key, {}))
             return result
-        elif value_type == "array" and isinstance(fields, list) and schema.get(
-                "items"):
-            return [
-                self.cast(value, schema["items"]) for value in fields
-            ]
+        elif value_type == "array" and isinstance(fields, list) and schema.get("items"):
+            return [self.cast(value, schema["items"]) for value in fields]
         elif value_type == "integer" and isinstance(fields, float):
             # The only thing that needs to be casted: floats -> ints
             return int(fields)
@@ -487,8 +488,7 @@ class Model(object):
 
         elif not self._schema.get("additionalProperties", True):
             # not allowed to add additional properties
-            raise ValidationError(
-                "Additional property '%s' not allowed!" % attr)
+            raise ValidationError("Additional property '%s' not allowed!" % attr)
 
         self._fields[attr] = value
         return value
@@ -496,11 +496,11 @@ class Model(object):
     def update(self, new_fields, update_id=False):
         """Update an object's fields"""
 
-        #try:
+        # try:
         if True:
             for key, value in new_fields.items():
                 if not key == "_id" or update_id:
                     self.__setattr__(key, value)
-        #except Exception as e:
+        # except Exception as e:
         #    raise ValidationError(
         #        "Unknown Validation error: '%s' (%s)" % (e, type(e)))
