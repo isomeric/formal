@@ -1,3 +1,7 @@
+# Doc builds
+docs/build
+
+# ???
 *.py[cod]
 
 # SCM versioning
