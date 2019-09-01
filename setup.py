@@ -52,7 +52,7 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
-        "Topic :: Database :: Front-Ends"
+        "Topic :: Database",
     ],
     long_description="""\
 JSON-Schema-based ODM for MongoDB and SQL
@@ -63,15 +63,11 @@ them to MongoDB or SQL based databases.
 """,
     install_requires=[
         "pymongo>=3.2",
-        "jsonschema>=3.0.1",
+        "jsonschema>=3.0.2",
         "deepdiff>=3.2.1",
-        "sqlalchemy>=1.2.14"
+        "sqlalchemy>=1.2.14",
     ],
     test_suite="tests",
-    use_scm_version={
-        "write_to": "formal/scm_version.py",
-    },
-    setup_requires=[
-        "setuptools_scm"
-    ],
+    use_scm_version={"write_to": "formal/scm_version.py"},
+    setup_requires=["setuptools_scm"],
 )
