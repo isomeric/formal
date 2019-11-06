@@ -115,7 +115,7 @@ class Model(ModelBase):
         return result
 
     @classmethod
-    def find(cls, *args, validation=True, **kwargs):
+    def find(cls, *args, **kwargs):
         """ Grabs a set of elements from the DB.
         Note: This returns a generator, so you can't to do an efficient count.
         To get a count, use the count() function which accepts the same
@@ -123,6 +123,9 @@ class Model(ModelBase):
         limit, skip.
         """
         options = {}
+        validation = kwargs.get('validation', True)
+        if 'validation' in kwargs:
+            del kwargs['validation']
 
         for option in ["sort", "limit", "skip", "batch_size"]:
             if option in kwargs:
