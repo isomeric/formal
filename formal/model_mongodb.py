@@ -64,7 +64,15 @@ class Model(ModelBase):
         """ Saves an object to the database. """
         self.validate()
 
-        self._fields["_id"] = self.collection().save(self._fields, *args, **kwargs)
+        if '_id' in self._fields:
+            result = self.collection().replace_one({'_id': self._fields['_id']}, self._fields, *args, **kwargs)
+            assert result.acknowledged is True
+            assert result.modified_count == 1
+        else:
+            result = self.collection().insert_one(self._fields)
+            assert result.acknowledged is True
+            assert result.inserted_id is not None
+            self._fields["_id"] = result.inserted_id
 
     def delete(self):
         """ Removes an object from the database. """
@@ -107,7 +115,7 @@ class Model(ModelBase):
         return result
 
     @classmethod
-    def find(cls, *args, **kwargs):
+    def find(cls, *args, validation=True, **kwargs):
         """ Grabs a set of elements from the DB.
         Note: This returns a generator, so you can't to do an efficient count.
         To get a count, use the count() function which accepts the same
@@ -139,7 +147,7 @@ class Model(ModelBase):
 
                 for obj in result:
                     found_something = True
-                    yield cls(obj, from_find=True)
+                    yield cls(obj, from_find=True, validation=validation)
 
                 current_skip += limit
         else:
@@ -155,7 +163,7 @@ class Model(ModelBase):
                 result = result.limit(options["limit"])
 
             for obj in result:
-                yield cls(obj, from_find=True)
+                yield cls(obj, from_find=True, validation=validation)
 
     @classmethod
     def find_by_id(cls, obj_id, **kwargs):
@@ -200,11 +208,7 @@ class Model(ModelBase):
         if object_filter is None:
             object_filter = {}
 
-        # TODO: WTF. Yeah. I love deprecation warnings, too, pymongo.
-        if hasattr(cls.collection, "count_documents"):
-            return cls.collection().count_documents(object_filter)
-        else:
-            return cls.collection().count(object_filter)
+        return cls.collection().count_documents(object_filter)
 
     @classmethod
     def collection(cls):
