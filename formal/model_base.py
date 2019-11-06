@@ -65,7 +65,7 @@ def extend_with_default(validator_class):
 
         for prop, sub_schema in properties.items():
             # print(property, sub_schema)
-            if "default" in sub_schema:
+            if isinstance(sub_schema, dict) and "default" in sub_schema:
                 # print("Setting default: ", sub_schema['default'])
                 instance.setdefault(prop, sub_schema["default"])
 
@@ -82,7 +82,8 @@ class ModelBase(object):
     """ This class serves as a base class for the main model types in
     formal: Model, and TwistedModel. """
 
-    def __init__(self, original_fields=None, from_find=False, *args, **kwargs):
+    def __init__(self, original_fields=None, from_find=False, validation=True, *args,
+                 **kwargs):
         """ Creates an instance of the object."""
         if original_fields is None:
             original_fields = {}
@@ -95,19 +96,21 @@ class ModelBase(object):
             try:
                 _ = ObjectId(fields["_id"])
             except InvalidId:
-                raise ValidationError("Invalid object ID: ", fields["_id"])
+                if validation:
+                    raise ValidationError("Invalid object ID: ", fields["_id"])
             has_id = True
             del fields["_id"]
 
         # populate any default fields for objects that haven't come from the DB
-        if not from_find:
+        if not from_find and validation:
             DefaultValidatingDraft4Validator(self._schema).validate(fields)
             # for field, details in self._schema["properties"].items():
             #    if "default" in details and not field in fields:
             #        fields[field] = details["default"]
 
         self._fields = self.cast(fields)
-        self.validate()
+        if validation is True:
+            self.validate()
         if has_id:
             self._fields["_id"] = original_fields["_id"]
 
@@ -142,7 +145,6 @@ class ModelBase(object):
         """ Validate `schema` against a dict `obj`. """
         # self.validate_field("", self._schema, self._fields)
         try:
-            pass
             # TODO: Deep-copying for validation is probably not so good ;)
             fields = dict(self._fields)
             if "_id" in fields:
@@ -170,9 +172,9 @@ class ModelBase(object):
         value_type = schema.get("type", "object")
 
         if (
-            value_type == "object"
-            and isinstance(fields, dict)
-            and schema.get("properties")
+                value_type == "object"
+                and isinstance(fields, dict)
+                and schema.get("properties")
         ):
             result = dict()
             for key, value in fields.items():
